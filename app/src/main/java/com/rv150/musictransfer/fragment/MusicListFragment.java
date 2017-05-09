@@ -1,21 +1,27 @@
 package com.rv150.musictransfer.fragment;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
 
-import java.util.List;
+import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -31,6 +37,8 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
     private MusicListAdapter adapter;
 
+    private static final int REQUEST_READ_EXT_STORAGE = 0;
+
 
     @Nullable
     @Override
@@ -38,6 +46,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         View view = inflater.inflate(R.layout.music_list_fragment, container, false);
         ButterKnife.bind(this, view);
         setUpRecyclerView();
+        updateList();
         return view;
     }
 
@@ -49,6 +58,9 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         recyclerView.setLayoutManager(llm);
         recyclerView.setHasFixedSize(true);
         recyclerView.setOnClickListener(this);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(dividerItemDecoration);
     }
 
 
@@ -60,6 +72,60 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
     }
 
+    private void updateList() {
+        Song[] songs = getMusicList();
+        adapter = new MusicListAdapter(Arrays.asList(songs), this);
+        recyclerView.swapAdapter(adapter, false);
+    }
+
+    private Song[] getMusicList() {
+        int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
+                Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_READ_EXT_STORAGE);
+            return new Song[0];
+        }
+
+        final Cursor cursor = getContext().getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Audio.Media.DISPLAY_NAME }, null, null,
+                "LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC");
+
+        if (cursor == null) {
+            Log.e(TAG, "Cursor is null!");
+            return new Song[0];
+        }
+
+        int count = cursor.getCount();
+        Song[] songs = new Song[count];
+        int i = 0;
+        if (cursor.moveToFirst()) {
+            do {
+                songs[i++] = new Song(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        return songs;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_READ_EXT_STORAGE: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    updateList();
+                }
+                break;
+            }
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                break;
+        }
+    }
 
     private static final String TAG = MusicListFragment.class.getSimpleName();
 }

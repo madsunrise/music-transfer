@@ -6,18 +6,12 @@ package com.rv150.musictransfer.model;
 
 public class Song {
     private final String title;
-    private final long size; // in bytes
 
-    public Song(String title, long size) {
+    public Song(String title) {
         this.title = title;
-        this.size = size;
     }
 
     public String getTitle() {
         return title;
-    }
-
-    public long getSize() {
-        return size;
     }
 }

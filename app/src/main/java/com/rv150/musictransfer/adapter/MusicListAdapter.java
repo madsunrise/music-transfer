@@ -4,7 +4,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.rv150.musictransfer.R;
@@ -41,7 +40,6 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyVi
     public void onBindViewHolder(final MyViewHolder holder, int position) {
         Song service = songs.get(position);
         holder.title.setText(service.getTitle());
-        holder.size.setText(service.getSize() + " bytes");
     }
 
     @Override
@@ -51,12 +49,10 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyVi
 
     class MyViewHolder extends RecyclerView.ViewHolder {
         TextView title;
-        TextView size;
 
         MyViewHolder(View view) {
             super(view);
             title = (TextView) view.findViewById(R.id.item_title);
-            size = (TextView) view.findViewById(R.id.item_size);
         }
     }
 
