@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
@@ -69,7 +70,6 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
-
     }
 
     private void updateList() {
@@ -90,7 +90,8 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
         final Cursor cursor = getContext().getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[] { MediaStore.Audio.Media.DISPLAY_NAME }, null, null,
+                new String[] { MediaStore.Audio.Media.DISPLAY_NAME,
+                                MediaStore.Audio.Media.DATA}, null, null,
                 "LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC");
 
         if (cursor == null) {
@@ -101,12 +102,11 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         int count = cursor.getCount();
         Song[] songs = new Song[count];
         int i = 0;
-        if (cursor.moveToFirst()) {
-            do {
-                songs[i++] = new Song(cursor.getString(0));
-            } while (cursor.moveToNext());
+        while (cursor.moveToNext()) {
+            String title = cursor.getString(0);
+            String path = cursor.getString(1);
+            songs[i++] = new Song(title, path);
         }
-
         cursor.close();
         return songs;
     }
