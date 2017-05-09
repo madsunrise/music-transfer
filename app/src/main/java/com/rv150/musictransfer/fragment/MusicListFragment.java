@@ -16,16 +16,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
+import com.rv150.musictransfer.network.ProgressRequestBody;
+import com.rv150.musictransfer.network.RetrofitClient;
 
 import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 /**
  * Created by ivan on 09.05.17.
@@ -39,6 +43,8 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     private MusicListAdapter adapter;
 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
+
+    private final RetrofitClient retrofitClient = RetrofitClient.retrofit.create(RetrofitClient.class);
 
 
     @Nullable
@@ -70,6 +76,16 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
+
+        String descriptionString = "hello, this is description speaking";
+        RequestBody description =
+                RequestBody.create(
+                        MediaType.parse("multipart/form-data"), descriptionString);
+
+        ProgressRequestBody fileBody = new ProgressRequestBody(file, this);
+        MultipartBody.Part filePart = MultipartBody.Part.createFormData("image", file.getName(), fileBody);
+
+        Call<JsonObdject> request = retrofitClient.uploadFile(filePart);
     }
 
     private void updateList() {
@@ -82,6 +98,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
                 Manifest.permission.READ_EXTERNAL_STORAGE);
 
+        // TODO Show explanation message if needed
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_READ_EXT_STORAGE);
