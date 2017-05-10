@@ -16,7 +16,7 @@ import retrofit2.http.Part;
  */
 
 public interface RetrofitClient {
-    String BASE_URL = "192.168.0.1";
+    String BASE_URL = "http://192.168.0.1:8088";
 
     @Multipart
     @POST("upload")

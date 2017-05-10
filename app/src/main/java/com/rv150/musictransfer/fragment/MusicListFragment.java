@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -22,6 +23,8 @@ import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
 import com.rv150.musictransfer.network.ProgressRequestBody;
 import com.rv150.musictransfer.network.RetrofitClient;
+import com.rv150.musictransfer.network.WebSocketClient;
+import com.rv150.musictransfer.utils.UiThread;
 
 import java.util.Arrays;
 
@@ -45,6 +48,8 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
 
     private final RetrofitClient retrofitClient = RetrofitClient.retrofit.create(RetrofitClient.class);
+
+    private final WebSocketClient webSocketClient = WebSocketClient.getInstance();
 
 
     @Nullable
@@ -76,16 +81,17 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
+        webSocketClient.sendMessage(item.getTitle());
 
-        String descriptionString = "hello, this is description speaking";
-        RequestBody description =
-                RequestBody.create(
-                        MediaType.parse("multipart/form-data"), descriptionString);
-
-        ProgressRequestBody fileBody = new ProgressRequestBody(file, this);
-        MultipartBody.Part filePart = MultipartBody.Part.createFormData("image", file.getName(), fileBody);
-
-        Call<JsonObdject> request = retrofitClient.uploadFile(filePart);
+//        String descriptionString = "hello, this is description speaking";
+//        RequestBody description =
+//                RequestBody.create(
+//                        MediaType.parse("multipart/form-data"), descriptionString);
+//
+//        ProgressRequestBody fileBody = new ProgressRequestBody(file, this);
+//        MultipartBody.Part filePart = MultipartBody.Part.createFormData("image", file.getName(), fileBody);
+//
+//        Call<JsonObdject> request = retrofitClient.uploadFile(filePart);
     }
 
     private void updateList() {
