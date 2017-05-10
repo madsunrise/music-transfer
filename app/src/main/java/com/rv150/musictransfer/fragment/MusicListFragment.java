@@ -49,9 +49,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
 
-    private final RetrofitClient retrofitClient = RetrofitClient.retrofit.create(RetrofitClient.class);
 
-    private final WebSocketClient webSocketClient = WebSocketClient.getInstance();
 
 
     @Nullable
