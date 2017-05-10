@@ -1,6 +1,7 @@
 package com.rv150.musictransfer.fragment;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.rv150.musictransfer.R;
+import com.rv150.musictransfer.activity.SendActivity;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
 import com.rv150.musictransfer.network.ProgressRequestBody;
@@ -81,17 +83,9 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
-        webSocketClient.sendMessage(item.getTitle());
-
-//        String descriptionString = "hello, this is description speaking";
-//        RequestBody description =
-//                RequestBody.create(
-//                        MediaType.parse("multipart/form-data"), descriptionString);
-//
-//        ProgressRequestBody fileBody = new ProgressRequestBody(file, this);
-//        MultipartBody.Part filePart = MultipartBody.Part.createFormData("image", file.getName(), fileBody);
-//
-//        Call<JsonObdject> request = retrofitClient.uploadFile(filePart);
+        Intent intent = new Intent(getContext(), SendActivity.class);
+        intent.putExtra(Song.class.getSimpleName(), item);
+        startActivity(intent);
     }
 
     private void updateList() {

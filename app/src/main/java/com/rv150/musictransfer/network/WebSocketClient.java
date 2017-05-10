@@ -1,6 +1,10 @@
 package com.rv150.musictransfer.network;
 
 
+import android.util.Log;
+
+import com.google.gson.Gson;
+
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -17,6 +21,9 @@ import okio.ByteString;
 public class WebSocketClient extends WebSocketListener {
 
     private WebSocket webSocket;
+    private static final String SERVER_URL = "ws://192.168.1.46:8088/v1/ws";
+    private final Gson gson = new Gson();
+    private int id = -1;
 
     private WebSocketClient() {
         OkHttpClient client = new OkHttpClient.Builder()
@@ -24,14 +31,9 @@ public class WebSocketClient extends WebSocketListener {
                 .build();
 
         Request request = new Request.Builder()
-                .url("ws://192.168.1.46:8088/v1/ws")
+                .url(SERVER_URL)
                 .build();
         webSocket = client.newWebSocket(request, this);
-
-
-
-        // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
-        //client.dispatcher().executorService().shutdown();
     }
 
     private static final WebSocketClient instance = new WebSocketClient();
@@ -46,13 +48,19 @@ public class WebSocketClient extends WebSocketListener {
 
     @Override
     public void onOpen(WebSocket webSocket, Response response) {
-        webSocket.send("Hello...");
-        webSocket.send("...World!");
+
     }
 
     @Override
     public void onMessage(WebSocket webSocket, String text) {
-        System.out.println("MESSAGE string: " + text);
+        Message message = gson.fromJson(text, Message.class);
+        switch (message.getType()) {
+            case Message.INITIALIZE_USER:
+                this.id = Integer.valueOf(message.getData());
+                break;
+            default:
+                throw new UnsupportedOperationException("No handlers?");
+        }
     }
 
     @Override
@@ -62,12 +70,13 @@ public class WebSocketClient extends WebSocketListener {
 
     @Override
     public void onClosing(WebSocket webSocket, int code, String reason) {
-        webSocket.close(1000, null);
-        System.out.println("CLOSE: " + code + " " + reason);
+
     }
 
     @Override
     public void onFailure(WebSocket webSocket, Throwable t, Response response) {
         t.printStackTrace();
     }
+
+    private static final String TAG = WebSocketClient.class.getSimpleName();
 }
