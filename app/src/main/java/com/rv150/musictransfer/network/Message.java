@@ -9,9 +9,10 @@ public class Message {
     private final String data;
 
     public static final String INITIALIZE_USER = "GettingID";
-    public static final String FILE = "File";
+    public static final String RECEIVER_ID = "receiver_id";
+    public static final String SENDING_FINISHED = "sending_finished";
 
-    Message(String type, String data) {
+    public Message(String type, String data) {
         this.type = type;
         this.data = data;
     }

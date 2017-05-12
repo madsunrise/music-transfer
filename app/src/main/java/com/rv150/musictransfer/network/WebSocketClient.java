@@ -1,24 +1,20 @@
 package com.rv150.musictransfer.network;
 
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
-
+import com.rv150.musictransfer.utils.UiThread;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-
-
-import okio.ByteString;
-
+import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
 
 
 /**
@@ -28,76 +24,87 @@ import okio.ByteString;
 public class WebSocketClient extends WebSocketAdapter {
 
     private WebSocket webSocket;
-    private static final String SERVER_URL = "ws://192.168.1.50:8088/v1/binary";
+    private static final String SERVER_URL = "ws://192.168.1.36:8088/v1/ws";
     private final Gson gson = new Gson();
     private int id = -1;
 
-    private WebSocketClient() {
-//        OkHttpClient client = new OkHttpClient.Builder()
-//                .build();
-//
-//        Request request = new Request.Builder()
-//                .url(SERVER_URL)
-//                .build();
-//        webSocket = client.newWebSocket(request, this);
+    private WebSocketClient(Context context) {
         try {
-            webSocket = new WebSocketFactory().createSocket(SERVER_URL, 5000).addListener(this).connect();
+            this.context = context;
+            webSocket = new WebSocketFactory()
+                    .createSocket(SERVER_URL, 5000)
+                    .addListener(this)
+                    .connect();
         }
         catch (IOException | WebSocketException ex) {
             Log.e(TAG, ex.getMessage());
         }
     }
 
-    private static final WebSocketClient instance = new WebSocketClient();
+    private Context context;
+    private static WebSocketClient instance;
 
-    public static WebSocketClient getInstance() {
+    public static synchronized WebSocketClient getInstance(Context context) {
+        if (instance == null) {
+            instance = new WebSocketClient(context);
+        }
         return instance;
     }
 
+    int totalBytes = 0;
 
-//    @Override
-//    public void onOpen(okhttp3.WebSocket webSocket, Response response) {
-//        Log.d(TAG, "OnOpen!");
-//    }
-//
-//    @Override
-//    public void onMessage(okhttp3.WebSocket webSocket, String text) {
-//        Log.d(TAG, text);
-//    }
-//
-//    @Override
-//    public void onMessage(okhttp3.WebSocket webSocket, ByteString bytes) {
-//        Log.d(TAG, "Binary msg! Length " + bytes.size());
-//    }
-//
-//    @Override
-//    public void onClosing(okhttp3.WebSocket webSocket, int code, String reason) {
-//        Log.d(TAG, "OnClosing!");
-//    }
-//
-//    @Override
-//    public void onClosed(okhttp3.WebSocket webSocket, int code, String reason) {
-//        Log.d(TAG, "OnClosed!");
-//    }
-//
-//    @Override
-//    public void onFailure(okhttp3.WebSocket webSocket, Throwable t, Response response) {
-//        super.onFailure(webSocket, t, response);
-//    }
+    @Override
+    public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
+        Log.d(TAG, "Binary message");
+        totalBytes += binary.length;
+    }
 
-    public void onsTextMessage(WebSocket websocket, String text) throws Exception {
+    @Override
+    public void onTextMessage(WebSocket websocket, String text) throws Exception {
         Message message = gson.fromJson(text, Message.class);
         switch (message.getType()) {
             case Message.INITIALIZE_USER:
                 this.id = Integer.valueOf(message.getData());
+                Log.d(TAG, "Getting ID = " + this.id);
+                UiThread.run(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Your ID is " + id, Toast.LENGTH_LONG).show();
+                    }
+                });
+                break;
+            case Message.SENDING_FINISHED:
+                Log.d(TAG, "FINISHED! Total bytes = " + totalBytes);
+                UiThread.run(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Downloading has finished, total bytes = " + totalBytes, Toast.LENGTH_SHORT).show();
+                    }
+                });
                 break;
             default:
                 throw new UnsupportedOperationException("No handlers?");
         }
     }
 
+
+
+
+
     public WebSocket getWebSocket() {
         return webSocket;
+    }
+
+    public void sendFinishSignal() {
+        try {
+            Message message = new Message(SENDING_FINISHED, "ok");
+            String json = new Gson().toJson(message);
+            webSocket.sendText(json);
+            Log.d(TAG, "Sending finish signal!");
+        }
+        catch (Exception ex) {
+            Log.e(TAG, ex.getMessage());
+        }
     }
 
     private static final String TAG = WebSocketClient.class.getSimpleName();

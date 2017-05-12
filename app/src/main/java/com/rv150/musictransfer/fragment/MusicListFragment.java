@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -23,18 +22,18 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.activity.SendActivity;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
-import com.rv150.musictransfer.network.ProgressRequestBody;
-import com.rv150.musictransfer.network.RetrofitClient;
-import com.rv150.musictransfer.network.WebSocketClient;
-import com.rv150.musictransfer.utils.UiThread;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
+import rx.Observable;
+import rx.Scheduler;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by ivan on 09.05.17.
@@ -73,6 +72,8 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
                 DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(dividerItemDecoration);
+        adapter = new MusicListAdapter(new ArrayList<>(), this);
+        recyclerView.setAdapter(adapter);
     }
 
 
@@ -87,12 +88,16 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     }
 
     private void updateList() {
-        Song[] songs = getMusicList();
-        adapter = new MusicListAdapter(Arrays.asList(songs), this);
-        recyclerView.swapAdapter(adapter, false);
+        getMusicList()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(s -> adapter.addSong(s),
+                        e -> e.printStackTrace(),
+                        () -> System.out.println("Completed")
+                );
     }
 
-    private Song[] getMusicList() {
+    private Observable<Song> getMusicList()  {
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
                 Manifest.permission.READ_EXTERNAL_STORAGE);
 
@@ -100,7 +105,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_READ_EXT_STORAGE);
-            return new Song[0];
+            return Observable.from(new Song[0]);
         }
 
         final Cursor cursor = getContext().getContentResolver().query(
@@ -111,7 +116,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
         if (cursor == null) {
             Log.e(TAG, "Cursor is null!");
-            return new Song[0];
+            throw new RuntimeException("Cursor is null!");
         }
 
         int count = cursor.getCount();
@@ -123,7 +128,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
             songs[i++] = new Song(title, path);
         }
         cursor.close();
-        return songs;
+        return Observable.from(songs);
     }
 
     @Override

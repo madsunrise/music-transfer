@@ -1,7 +1,6 @@
 package com.rv150.musictransfer.activity;
 
 import android.os.Bundle;
-import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -9,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.PrepareSendingFragment;
-import com.rv150.musictransfer.model.Song;
 
 /**
  * Created by ivan on 10.05.17.
@@ -18,7 +16,6 @@ import com.rv150.musictransfer.model.Song;
 public class SendActivity extends AppCompatActivity {
 
     private PrepareSendingFragment prepareSendingFragment = new PrepareSendingFragment();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
