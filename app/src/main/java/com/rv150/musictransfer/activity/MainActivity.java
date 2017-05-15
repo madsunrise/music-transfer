@@ -44,12 +44,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.navigation_home:
                 return true;
             case R.id.navigation_dashboard:
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        WebSocketClient.getInstance(getApplicationContext());
-                    }
-                }).start();
+                new Thread(() -> WebSocketClient.getInstance(MainActivity.this)).start();
                 return true;
             case R.id.navigation_notifications:
                 return true;

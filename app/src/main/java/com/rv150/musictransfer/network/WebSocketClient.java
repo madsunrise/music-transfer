@@ -1,7 +1,11 @@
 package com.rv150.musictransfer.network;
 
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Environment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -10,10 +14,25 @@ import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
+import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.utils.UiThread;
 
-import java.io.IOException;
+import net.rdrei.android.dirchooser.DirectoryChooserActivity;
+import net.rdrei.android.dirchooser.DirectoryChooserConfig;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static com.rv150.musictransfer.network.Message.ALLOW_TRANSFERRING;
+import static com.rv150.musictransfer.network.Message.ANSWER_ON_REQUEST;
+import static com.rv150.musictransfer.network.Message.ERROR;
+import static com.rv150.musictransfer.network.Message.INITIALIZE_USER;
+import static com.rv150.musictransfer.network.Message.RECEIVER_NOT_FOUND;
+import static com.rv150.musictransfer.network.Message.REQUEST_SEND;
 import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
 
 
@@ -24,15 +43,17 @@ import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
 public class WebSocketClient extends WebSocketAdapter {
 
     private WebSocket webSocket;
-    private static final String SERVER_URL = "ws://192.168.1.36:8088/v1/ws";
+    private static final String SERVER_URL = "ws://212.109.192.197:8088/v1/ws";
     private final Gson gson = new Gson();
     private int id = -1;
 
-    private WebSocketClient(Context context) {
+    private static final int RC_DIRECTORY_PICKER_FILE = 0;
+
+    private WebSocketClient(Context activity) {
         try {
-            this.context = context;
+            this.activity = activity;
             webSocket = new WebSocketFactory()
-                    .createSocket(SERVER_URL, 5000)
+                    .createSocket(SERVER_URL, 3000)
                     .addListener(this)
                     .connect();
         }
@@ -41,47 +62,91 @@ public class WebSocketClient extends WebSocketAdapter {
         }
     }
 
-    private Context context;
+    private Context activity;
     private static WebSocketClient instance;
 
-    public static synchronized WebSocketClient getInstance(Context context) {
+    public static synchronized WebSocketClient getInstance(Context activity) {
         if (instance == null) {
-            instance = new WebSocketClient(context);
+            instance = new WebSocketClient(activity);
         }
         return instance;
     }
 
-    int totalBytes = 0;
+    private BufferedOutputStream outputStream = null;
+    private String currentFileName = null;
 
     @Override
     public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
-        Log.d(TAG, "Binary message");
-        totalBytes += binary.length;
+        Log.d(TAG, "OnBinary message");
+        if (currentFileName == null) {
+            Log.e(TAG, "Getting binary data without filename registration!");
+            return;
+        }
+        if (outputStream == null) {
+            File dir = Environment.getExternalStorageDirectory();
+            File file = new File(dir, currentFileName);
+            if (!file.createNewFile()) {
+                Log.e(TAG, "Failed to create new file! Permissions?");
+                Toast.makeText(activity, R.string.internal_error, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            outputStream = new BufferedOutputStream(new FileOutputStream(file));
+        }
+        outputStream.write(binary);
     }
+
 
     @Override
     public void onTextMessage(WebSocket websocket, String text) throws Exception {
         Message message = gson.fromJson(text, Message.class);
         switch (message.getType()) {
-            case Message.INITIALIZE_USER:
+            case INITIALIZE_USER:
                 this.id = Integer.valueOf(message.getData());
                 Log.d(TAG, "Getting ID = " + this.id);
-                UiThread.run(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context, "Your ID is " + id, Toast.LENGTH_LONG).show();
-                    }
-                });
+                UiThread.run(() ->
+                        Toast.makeText(activity, "Your ID is " + id, Toast.LENGTH_LONG).show()
+                );
                 break;
-            case Message.SENDING_FINISHED:
-                Log.d(TAG, "FINISHED! Total bytes = " + totalBytes);
-                UiThread.run(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context, "Downloading has finished, total bytes = " + totalBytes, Toast.LENGTH_SHORT).show();
-                    }
-                });
+
+
+            case SENDING_FINISHED:
+                Log.d(TAG, "FINISHED Receiving file!");
+                UiThread.run(() ->
+                        Toast.makeText(activity, R.string.downloading_has_finished, Toast.LENGTH_SHORT).show()
+                );
+                outputStream.close();
+                outputStream = null;
                 break;
+
+            case REQUEST_SEND:
+                currentFileName = message.getData();
+                Log.d(TAG, "Getted request on sending " + currentFileName);
+                UiThread.run(() ->
+                        new AlertDialog.Builder(activity)
+                                .setMessage(String.format(activity.getString(R.string.do_you_want_to_accept_new_file), currentFileName))
+                                .setPositiveButton(R.string.yes, (d, w) -> sendAnswerOnRequest(true))
+                                .setNegativeButton(R.string.no, (d, w) -> sendAnswerOnRequest(false))
+                                .show()
+                );
+
+                break;
+
+
+            case ERROR:
+                Log.d(TAG, "Error! " + message.getData());
+                switch (message.getData()) {
+                    case RECEIVER_NOT_FOUND: {
+                        Toast.makeText(activity, R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                }
+                break;
+
+            case ALLOW_TRANSFERRING:
+                Log.d(TAG, "Transfer has been approved, sending!");
+                sendFile();
+                break;
+
             default:
                 throw new UnsupportedOperationException("No handlers?");
         }
@@ -89,13 +154,57 @@ public class WebSocketClient extends WebSocketAdapter {
 
 
 
+    private String path;
+    public void registerFileToSend(String path) {
+        this.path = path;
+    }
+
+    private void sendFile() {
+        if (path == null) {
+            Log.e(TAG, "Error sending file - path is null!");
+        }
+        int BUFFER_SIZE = 32 * 1024;
+        File file = new File(path);
+        try {
+            InputStream is = new FileInputStream(file);
+            byte[] chunk = new byte[BUFFER_SIZE];
+
+            while (is.read(chunk) != -1) {
+                webSocket.sendBinary(chunk);
+            }
+
+            sendFinishSignal();
+            Log.d(TAG, "Transferring has been finished!");
+        } catch (IOException ex) {
+            Log.e(TAG, ex.getMessage());
+        }
+    }
+
+    private void sendAnswerOnRequest(boolean answer) {
+        Log.d(TAG, "Sending answer in request: " + String.valueOf(answer));
+        Message message = new Message(ANSWER_ON_REQUEST, String.valueOf(answer));
+        webSocket.sendText(new Gson().toJson(message));
+    }
+
+
+
+    private void showFilePicker() {
+        final Intent chooserIntent = new Intent(activity, DirectoryChooserActivity.class);
+        final DirectoryChooserConfig config = DirectoryChooserConfig.builder()
+                .newDirectoryName("New folder")
+                .allowReadOnlyDirectory(true)
+                .allowNewDirectoryNameModification(true)
+                .build();
+        chooserIntent.putExtra(DirectoryChooserActivity.EXTRA_CONFIG, config);
+       // activity.startActivityForResult(chooserIntent, RC_DIRECTORY_PICKER_FILE);
+    }
 
 
     public WebSocket getWebSocket() {
         return webSocket;
     }
 
-    public void sendFinishSignal() {
+    private void sendFinishSignal() {
         try {
             Message message = new Message(SENDING_FINISHED, "ok");
             String json = new Gson().toJson(message);

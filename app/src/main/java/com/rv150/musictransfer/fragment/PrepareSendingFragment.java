@@ -66,27 +66,12 @@ public class PrepareSendingFragment extends Fragment {
     public void send() {
         final String code = receiverCode.getText().toString();
         executor.execute(() -> {
-            int BUFFER_SIZE = 1024;
             WebSocketClient webSocketClient = WebSocketClient.getInstance(getContext());
             Message message = new Message(RECEIVER_ID, code);
-            webSocketClient.getWebSocket().sendText(new Gson().toJson(message));
+            webSocketClient.getWebSocket().sendText(new Gson().toJson(message));    // TODO NPE
 
             String path = song.getPath();
-            File file = new File(path);
-            try {
-                InputStream is = new FileInputStream(file);
-                byte[] chunk = new byte[BUFFER_SIZE];
-
-                int chunkLen;
-                while ((chunkLen = is.read(chunk)) != -1) {
-                    webSocketClient.getWebSocket().sendBinary(chunk);
-                }
-
-                webSocketClient.sendFinishSignal();
-                webSocketClient.getWebSocket().disconnect();
-            } catch (IOException ex) {
-                Log.e(TAG, ex.getMessage());
-            }
+            webSocketClient.registerFileToSend(path);
         });
     }
 

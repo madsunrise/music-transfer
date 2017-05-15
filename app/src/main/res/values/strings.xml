@@ -4,4 +4,10 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="send">Отправить</string>
+    <string name="downloading_has_finished">Загрузка завершена</string>
+    <string name="do_you_want_to_accept_new_file">Вы хотите принять файл %s?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="internal_error">Произошла внутренняя ошибка</string>
+    <string name="receiver_with_this_id_not_found">Получатель с таким ID не найден!</string>
 </resources>

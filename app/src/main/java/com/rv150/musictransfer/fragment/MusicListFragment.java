@@ -23,16 +23,12 @@ import com.rv150.musictransfer.activity.SendActivity;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
-import rx.Scheduler;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -99,11 +95,11 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
     private Observable<Song> getMusicList()  {
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
-                Manifest.permission.READ_EXTERNAL_STORAGE);
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         // TODO Show explanation message if needed
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_READ_EXT_STORAGE);
             return Observable.from(new Song[0]);
         }
