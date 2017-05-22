@@ -10,7 +10,6 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
 import com.rv150.musictransfer.model.Song;
 
-import java.util.Collections;
 import java.util.List;
 
 /**

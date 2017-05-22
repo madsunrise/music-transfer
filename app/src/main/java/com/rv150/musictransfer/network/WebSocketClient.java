@@ -1,7 +1,6 @@
 package com.rv150.musictransfer.network;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
@@ -26,6 +25,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 
 import static com.rv150.musictransfer.network.Message.ALLOW_TRANSFERRING;
 import static com.rv150.musictransfer.network.Message.ANSWER_ON_REQUEST;
@@ -53,7 +54,7 @@ public class WebSocketClient extends WebSocketAdapter {
         try {
             this.activity = activity;
             webSocket = new WebSocketFactory()
-                    .createSocket(SERVER_URL, 3000)
+                    .createSocket(SERVER_URL, 5000)
                     .addListener(this)
                     .connect();
         }
@@ -77,7 +78,6 @@ public class WebSocketClient extends WebSocketAdapter {
 
     @Override
     public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
-        Log.d(TAG, "OnBinary message");
         if (currentFileName == null) {
             Log.e(TAG, "Getting binary data without filename registration!");
             return;
@@ -87,10 +87,12 @@ public class WebSocketClient extends WebSocketAdapter {
             File file = new File(dir, currentFileName);
             if (!file.createNewFile()) {
                 Log.e(TAG, "Failed to create new file! Permissions?");
-                Toast.makeText(activity, R.string.internal_error, Toast.LENGTH_SHORT).show();
+                UiThread.run(() -> Toast.makeText(activity, R.string.internal_error, Toast.LENGTH_SHORT).show());
                 return;
             }
-            outputStream = new BufferedOutputStream(new FileOutputStream(file));
+            OutputStream os = new FileOutputStream(file);
+            outputStream = new BufferedOutputStream(os);
+            Log.d(TAG, "Output stream was initialized");
         }
         outputStream.write(binary);
     }
@@ -114,8 +116,8 @@ public class WebSocketClient extends WebSocketAdapter {
                 UiThread.run(() ->
                         Toast.makeText(activity, R.string.downloading_has_finished, Toast.LENGTH_SHORT).show()
                 );
+                outputStream.flush();
                 outputStream.close();
-                outputStream = null;
                 break;
 
             case REQUEST_SEND:
@@ -163,18 +165,21 @@ public class WebSocketClient extends WebSocketAdapter {
         if (path == null) {
             Log.e(TAG, "Error sending file - path is null!");
         }
-        int BUFFER_SIZE = 32 * 1024;
+        int BUFFER_SIZE = 16 * 1024;
         File file = new File(path);
         try {
+
             InputStream is = new FileInputStream(file);
             byte[] chunk = new byte[BUFFER_SIZE];
 
-            while (is.read(chunk) != -1) {
-                webSocket.sendBinary(chunk);
+            int chunkLen;
+            while ((chunkLen = is.read(chunk, 0, BUFFER_SIZE)) != -1) {
+                byte[] sended = Arrays.copyOfRange(chunk, 0, chunkLen);
+                webSocket.sendBinary(sended);
             }
 
             sendFinishSignal();
-            Log.d(TAG, "Transferring has been finished!");
+            Log.d(TAG, "Transferring has been finished");
         } catch (IOException ex) {
             Log.e(TAG, ex.getMessage());
         }
@@ -215,6 +220,7 @@ public class WebSocketClient extends WebSocketAdapter {
             Log.e(TAG, ex.getMessage());
         }
     }
+
 
     private static final String TAG = WebSocketClient.class.getSimpleName();
 }

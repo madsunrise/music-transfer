@@ -3,7 +3,6 @@ package com.rv150.musictransfer.fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,12 +13,9 @@ import com.google.gson.Gson;
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.model.Song;
 import com.rv150.musictransfer.network.Message;
+import com.rv150.musictransfer.network.SendRequest;
 import com.rv150.musictransfer.network.WebSocketClient;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -67,7 +63,7 @@ public class PrepareSendingFragment extends Fragment {
         final String code = receiverCode.getText().toString();
         executor.execute(() -> {
             WebSocketClient webSocketClient = WebSocketClient.getInstance(getContext());
-            Message message = new Message(RECEIVER_ID, code);
+            Message message = new Message(RECEIVER_ID, new Gson().toJson(new SendRequest(code, song.getTitle())));
             webSocketClient.getWebSocket().sendText(new Gson().toJson(message));    // TODO NPE
 
             String path = song.getPath();
