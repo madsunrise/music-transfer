@@ -10,4 +10,7 @@
     <string name="no">Нет</string>
     <string name="internal_error">Произошла внутренняя ошибка</string>
     <string name="receiver_with_this_id_not_found">Получатель с таким ID не найден!</string>
+    <string name="receive">Принять</string>
+    <string name="settings">Настройки</string>
+    <string name="start_sending">Начинаем отправку...</string>
 </resources>

@@ -138,7 +138,9 @@ public class WebSocketClient extends WebSocketAdapter {
                 Log.d(TAG, "Error! " + message.getData());
                 switch (message.getData()) {
                     case RECEIVER_NOT_FOUND: {
-                        Toast.makeText(activity, R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show();
+                        UiThread.run(() ->
+                                Toast.makeText(activity, R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show()
+                        );
                         break;
                     }
                 }
@@ -146,6 +148,9 @@ public class WebSocketClient extends WebSocketAdapter {
 
             case ALLOW_TRANSFERRING:
                 Log.d(TAG, "Transfer has been approved, sending!");
+                UiThread.run(() ->
+                        Toast.makeText(activity, R.string.start_sending, Toast.LENGTH_SHORT).show()
+                );
                 sendFile();
                 break;
 
