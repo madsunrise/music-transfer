@@ -1,36 +1,17 @@
 package com.rv150.musictransfer.activity;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.view.MenuItem;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
+import com.rv150.musictransfer.network.WebSocketClient;
 
 public class MainActivity extends AppCompatActivity {
-
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
-            = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
-        @Override
-        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    return true;
-                case R.id.navigation_dashboard:
-                    return true;
-                case R.id.navigation_notifications:
-                    return true;
-            }
-            return false;
-        }
-
-    };
 
     private final MusicListFragment musicListFragment = new MusicListFragment();
 
@@ -54,4 +35,20 @@ public class MainActivity extends AppCompatActivity {
         }
         transaction.commitAllowingStateLoss();
     }
+
+
+
+    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+            = item -> {
+        switch (item.getItemId()) {
+            case R.id.navigation_home:
+                return true;
+            case R.id.navigation_dashboard:
+                new Thread(() -> WebSocketClient.getInstance(MainActivity.this)).start();
+                return true;
+            case R.id.navigation_notifications:
+                return true;
+        }
+        return false;
+    };
 }

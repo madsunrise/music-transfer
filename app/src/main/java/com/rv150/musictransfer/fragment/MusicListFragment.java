@@ -1,11 +1,11 @@
 package com.rv150.musictransfer.fragment;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -19,20 +19,17 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.rv150.musictransfer.R;
+import com.rv150.musictransfer.activity.SendActivity;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
-import com.rv150.musictransfer.network.ProgressRequestBody;
-import com.rv150.musictransfer.network.RetrofitClient;
-import com.rv150.musictransfer.network.WebSocketClient;
-import com.rv150.musictransfer.utils.UiThread;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by ivan on 09.05.17.
@@ -47,9 +44,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
 
-    private final RetrofitClient retrofitClient = RetrofitClient.retrofit.create(RetrofitClient.class);
 
-    private final WebSocketClient webSocketClient = WebSocketClient.getInstance();
 
 
     @Nullable
@@ -73,6 +68,8 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
                 DividerItemDecoration.VERTICAL);
         recyclerView.addItemDecoration(dividerItemDecoration);
+        adapter = new MusicListAdapter(new ArrayList<>(), this);
+        recyclerView.setAdapter(adapter);
     }
 
 
@@ -81,34 +78,30 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
-        webSocketClient.sendMessage(item.getTitle());
-
-//        String descriptionString = "hello, this is description speaking";
-//        RequestBody description =
-//                RequestBody.create(
-//                        MediaType.parse("multipart/form-data"), descriptionString);
-//
-//        ProgressRequestBody fileBody = new ProgressRequestBody(file, this);
-//        MultipartBody.Part filePart = MultipartBody.Part.createFormData("image", file.getName(), fileBody);
-//
-//        Call<JsonObdject> request = retrofitClient.uploadFile(filePart);
+        Intent intent = new Intent(getContext(), SendActivity.class);
+        intent.putExtra(Song.class.getSimpleName(), item);
+        startActivity(intent);
     }
 
     private void updateList() {
-        Song[] songs = getMusicList();
-        adapter = new MusicListAdapter(Arrays.asList(songs), this);
-        recyclerView.swapAdapter(adapter, false);
+        getMusicList()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(s -> adapter.addSong(s),
+                        e -> e.printStackTrace(),
+                        () -> System.out.println("Completed")
+                );
     }
 
-    private Song[] getMusicList() {
+    private Observable<Song> getMusicList()  {
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
-                Manifest.permission.READ_EXTERNAL_STORAGE);
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         // TODO Show explanation message if needed
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_READ_EXT_STORAGE);
-            return new Song[0];
+            return Observable.from(new Song[0]);
         }
 
         final Cursor cursor = getContext().getContentResolver().query(
@@ -119,7 +112,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
         if (cursor == null) {
             Log.e(TAG, "Cursor is null!");
-            return new Song[0];
+            throw new RuntimeException("Cursor is null!");
         }
 
         int count = cursor.getCount();
@@ -131,7 +124,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
             songs[i++] = new Song(title, path);
         }
         cursor.close();
-        return songs;
+        return Observable.from(songs);
     }
 
     @Override
