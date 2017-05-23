@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.activity.SendActivity;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
+import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -84,30 +86,31 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     }
 
     private void updateList() {
-        getMusicList()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(s -> adapter.addSong(s),
-                        e -> e.printStackTrace(),
-                        () -> System.out.println("Completed")
-                );
+        Observable.create(musicListGenerator)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(song -> adapter.addSong(song),
+                e -> Toast.makeText(getContext(), R.string.internal_error, Toast.LENGTH_SHORT).show(),
+                () -> Log.d(TAG, "Completed")
+        );
     }
 
-    private Observable<Song> getMusicList()  {
+
+    private final Observable.OnSubscribe<Song> musicListGenerator = (subscriber) -> {
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
         // TODO Show explanation message if needed
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_READ_EXT_STORAGE);
-            return Observable.from(new Song[0]);
+            subscriber.onCompleted();
         }
 
         final Cursor cursor = getContext().getContentResolver().query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[] { MediaStore.Audio.Media.DISPLAY_NAME,
-                                MediaStore.Audio.Media.DATA}, null, null,
+                new String[]{MediaStore.Audio.Media.DISPLAY_NAME,
+                        MediaStore.Audio.Media.DATA}, null, null,
                 "LOWER(" + MediaStore.Audio.Media.TITLE + ") ASC");
 
         if (cursor == null) {
@@ -115,17 +118,27 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
             throw new RuntimeException("Cursor is null!");
         }
 
-        int count = cursor.getCount();
-        Song[] songs = new Song[count];
+        final int animationLimit = 15;
         int i = 0;
         while (cursor.moveToNext()) {
+            if (i < animationLimit) {
+                try {
+                    Thread.sleep(55);
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+            }
             String title = cursor.getString(0);
             String path = cursor.getString(1);
-            songs[i++] = new Song(title, path);
+            subscriber.onNext(new Song(title, path));
+            i++;
         }
         cursor.close();
-        return Observable.from(songs);
-    }
+        subscriber.onCompleted();
+    };
+
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
