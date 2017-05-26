@@ -13,6 +13,7 @@ import com.rv150.musictransfer.fragment.ReceivingFragment;
 
 public class MainActivity extends AppCompatActivity {
 
+    private Fragment currentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
             transaction.addToBackStack(null);
         }
         transaction.commitAllowingStateLoss();
+        currentFragment = fragment;
     }
 
 
@@ -44,7 +46,9 @@ public class MainActivity extends AppCompatActivity {
                 changeFragment(new MusicListFragment(), false);
                 return true;
             case R.id.navigation_dashboard:
-                changeFragment(new ReceivingFragment(), false);
+                if (!(currentFragment instanceof ReceivingFragment)) {
+                    changeFragment(new ReceivingFragment(), false);
+                }
                 return true;
             case R.id.navigation_notifications:
                 return true;
