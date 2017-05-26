@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +33,7 @@ import static com.rv150.musictransfer.network.WebSocketClient.CONNECTION_ERROR;
  * Created by ivan on 26.05.17.
  */
 
-public class ReceivingFragment extends Fragment implements WebSocketClient.Callback {
+public class ReceivingFragment extends Fragment implements WebSocketClient.ReceiverCallback {
 
     @BindView(R.id.status)
     TextView status;
@@ -67,7 +68,7 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.receiving_fragment, container, false);
         ButterKnife.bind(this, view);
-        webSocketClient.setCallback(this);
+        webSocketClient.setReceiverCallback(this);
         connectToWebsocket();
         return view;
     }
@@ -87,12 +88,20 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
 
     @Override
     public void onSendRequest(String fileName) {
-
+        new AlertDialog.Builder(getContext())
+                .setMessage(String.format(getString(R.string.do_you_want_to_accept_new_file), fileName))
+                .setPositiveButton(R.string.yes, (d, w) -> sendAnswerOnRequest(true))
+                .setNegativeButton(R.string.no, (d, w) -> sendAnswerOnRequest(false))
+                .show();
     }
 
     @Override
     public void onFileReceived() {
 
+    }
+
+    private void sendAnswerOnRequest(boolean accept) {
+        networkExecutor.execute(() -> webSocketClient.sendAnswerOnRequest(accept));
     }
 
     @Override
@@ -122,7 +131,7 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
             catch (WebSocketException | IOException ex) {
                 UiThread.run(() -> {
                     progressBar.setVisibility(View.GONE);
-                    Log.e(TAG, "Failed to create websocket! " + ex.getMessage());
+                    Log.e(TAG, "Failed to connect to websocket! " + ex.getMessage());
                     status.setVisibility(View.VISIBLE);
                     Toast.makeText(getContext(),
                             R.string.connection_error, Toast.LENGTH_SHORT).show();
@@ -136,7 +145,7 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        webSocketClient.setCallback(null);
+        webSocketClient.setReceiverCallback(null);
         webSocketClient.disconnect();
     }
 
