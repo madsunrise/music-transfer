@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +38,9 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
     @BindView(R.id.your_id)
     TextView yourId;
 
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
+
     private Long id;
 
     private WebSocketClient webSocketClient;
@@ -65,7 +69,9 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
            }
            catch (WebSocketException | IOException ex) {
                UiThread.run(() -> {
+                   progressBar.setVisibility(View.GONE);
                    Log.e(TAG, "Failed to create websocket! " + ex.getMessage());
+                   status.setVisibility(View.VISIBLE);
                    Toast.makeText(getContext(),
                            R.string.failed_to_setup_connection, Toast.LENGTH_SHORT).show();
                    status.setText(R.string.no_connection);
@@ -79,6 +85,8 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
     @Override
     public void onIdRegistered(long id) {
         this.id = id;
+        progressBar.setVisibility(View.GONE);
+        status.setVisibility(View.VISIBLE);
         status.setText(R.string.connection_established);
         status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
         yourId.setVisibility(View.VISIBLE);
@@ -99,6 +107,7 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
     public void onError(int errorCode) {
         switch (errorCode) {
             case CONNECTION_ERROR: {
+                progressBar.setVisibility(View.GONE);
                 status.setText(R.string.no_connection);
                 status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
                 Toast.makeText(getContext(), R.string.failed_to_setup_connection, Toast.LENGTH_SHORT).show();
