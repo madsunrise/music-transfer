@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 import static com.rv150.musictransfer.network.WebSocketClient.CONNECTION_ERROR;
 
@@ -40,6 +42,9 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
 
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
+
+    @BindView(R.id.retry)
+    Button retryBtn;
 
     private Long id;
 
@@ -63,21 +68,7 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
         View view = inflater.inflate(R.layout.receiving_fragment, container, false);
         ButterKnife.bind(this, view);
         webSocketClient.setCallback(this);
-        networkExecutor.execute(() ->  {
-           try {
-               webSocketClient.connect();
-           }
-           catch (WebSocketException | IOException ex) {
-               UiThread.run(() -> {
-                   progressBar.setVisibility(View.GONE);
-                   Log.e(TAG, "Failed to create websocket! " + ex.getMessage());
-                   status.setVisibility(View.VISIBLE);
-                   Toast.makeText(getContext(),
-                           R.string.failed_to_setup_connection, Toast.LENGTH_SHORT).show();
-                   status.setText(R.string.no_connection);
-                   status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
-               });
-           }});
+        connectToWebsocket();
         return view;
     }
 
@@ -91,6 +82,7 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
         status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
         yourId.setVisibility(View.VISIBLE);
         yourId.setText(String.format(getString(R.string.your_id_is), id));
+        retryBtn.setVisibility(View.GONE);
     }
 
     @Override
@@ -108,13 +100,37 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
         switch (errorCode) {
             case CONNECTION_ERROR: {
                 progressBar.setVisibility(View.GONE);
+                status.setVisibility(View.VISIBLE);
                 status.setText(R.string.no_connection);
                 status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
-                Toast.makeText(getContext(), R.string.failed_to_setup_connection, Toast.LENGTH_SHORT).show();
-                yourId.setVisibility(View.GONE);
+                Toast.makeText(getContext(), R.string.connection_error, Toast.LENGTH_SHORT).show();
+                yourId.setVisibility(View.INVISIBLE);
+                retryBtn.setVisibility(View.VISIBLE);
+                break;
             }
         }
+    }
 
+
+
+    @OnClick(R.id.retry)
+    void connectToWebsocket() {
+        networkExecutor.execute(() ->  {
+            try {
+                webSocketClient.connect();
+            }
+            catch (WebSocketException | IOException ex) {
+                UiThread.run(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    Log.e(TAG, "Failed to create websocket! " + ex.getMessage());
+                    status.setVisibility(View.VISIBLE);
+                    Toast.makeText(getContext(),
+                            R.string.connection_error, Toast.LENGTH_SHORT).show();
+                    status.setText(R.string.no_connection);
+                    status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
+                    retryBtn.setVisibility(View.VISIBLE);
+                });
+            }});
     }
 
     @Override

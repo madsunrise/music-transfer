@@ -16,8 +16,8 @@
         android:layout_height="wrap_content"
         android:text="@string/connection_setup"
         android:textSize="20sp"
-        android:visibility="gone"
-        android:layout_marginTop="190dp"
+        android:visibility="invisible"
+        android:layout_above="@+id/your_id"
         android:layout_centerHorizontal="true" />
 
     <TextView
@@ -26,8 +26,18 @@
         android:layout_height="wrap_content"
         android:textSize="24sp"
         android:layout_marginTop="15dp"
-        android:visibility="gone"
+        android:visibility="invisible"
         android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:id="@+id/retry"
+        android:text="@string/retry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:layout_below="@+id/your_id"
+        android:visibility="invisible"
         android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

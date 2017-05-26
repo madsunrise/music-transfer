@@ -9,6 +9,7 @@ import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
+import com.neovisionaries.ws.client.WebSocketFrame;
 import com.rv150.musictransfer.utils.UiThread;
 
 import java.io.BufferedOutputStream;
@@ -219,10 +220,26 @@ public class WebSocketClient extends WebSocketAdapter {
         }
     }
 
+    @Override
+    public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws Exception {
+        super.onDisconnected(websocket, serverCloseFrame, clientCloseFrame, closedByServer);
+        if (closedByServer) {
+            Log.d(TAG, "Connection was closed by server");
+            return;
+        }
+        Log.d(TAG, "Disconnected!");
+        UiThread.run(() -> {
+                    if (callback != null) {
+                        callback.onError(CONNECTION_ERROR);
+                    }
+                }
+        );
+    }
 
     @Override
     public void onConnectError(WebSocket websocket, WebSocketException exception) throws Exception {
         super.onConnectError(websocket, exception);
+        Log.d(TAG, "Connection error! Reason: " + exception.getMessage());
         UiThread.run(() -> {
                 if (callback != null) {
                     callback.onError(CONNECTION_ERROR);
