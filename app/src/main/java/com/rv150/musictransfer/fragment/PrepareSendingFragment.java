@@ -14,7 +14,6 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.model.Song;
 import com.rv150.musictransfer.network.Message;
 import com.rv150.musictransfer.network.SendRequest;
-import com.rv150.musictransfer.network.WebSocketClient;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -62,12 +61,12 @@ public class PrepareSendingFragment extends Fragment {
     public void send() {
         final String code = receiverCode.getText().toString();
         executor.execute(() -> {
-            WebSocketClient webSocketClient = WebSocketClient.getInstance(getContext());
+            //WebSocketClient webSocketClient = WebSocketClient.getInstance();
             Message message = new Message(RECEIVER_ID, new Gson().toJson(new SendRequest(code, song.getTitle())));
-            webSocketClient.getWebSocket().sendText(new Gson().toJson(message));    // TODO NPE
+          //  webSocketClient.getWebSocket().sendText(new Gson().toJson(message));    // TODO NPE
 
             String path = song.getPath();
-            webSocketClient.registerFileToSend(path);
+           // webSocketClient.registerFileToSend(path);
         });
     }
 
