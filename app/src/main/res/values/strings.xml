@@ -19,4 +19,12 @@
     <string name="no_connection">Нет соединения</string>
     <string name="your_id_is">Ваш ID: %d</string>
     <string name="retry">Повторить</string>
+    <string name="receiver_id">ID получателя</string>
+    <string name="receiver_id_hint">Получатель должен выбрать пункт \"Принять\" и сообщить вам свой ID</string>
+    <string name="sending_songname">Передача %s&#8230;</string>
+    <string name="id_must_consist_of_n_digits">ID должен состоять из %d цифр!</string>
+    <string name="wait_for_receiver">Ждем подтвердения от получателя&#8230;</string>
+    <string name="sending">Отправка&#8230;</string>
+    <string name="sending_has_finished">Передача завершена!</string>
+
 </resources>

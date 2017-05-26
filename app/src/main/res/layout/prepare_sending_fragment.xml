@@ -1,32 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="@dimen/activity_horizontal_margin">
 
     <TextView
         android:id="@+id/sending_info"
+        android:textSize="16sp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:maxLines="1"/>
+
 
     <LinearLayout
+        android:id="@+id/main_part"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="75dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/receiver_id"
+            android:textSize="20sp"/>
 
         <EditText
             android:id="@+id/receiver_id"
-            android:layout_width="150dp"
-            android:layout_marginTop="20dp"
-            android:inputType="number"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/send"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/send"/>
+            android:layout_width="100dp"
+            android:inputType="number"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:maxLength="@integer/id_length"
+            android:textAlignment="center"/>
 
     </LinearLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/receiver_id_hint"
+        android:textColor="@color/hint_color"/>
 
+    <Button
+        android:id="@+id/send"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/send"
+        android:layout_gravity="end"
+        android:enabled="false"
+        style="@style/Widget.AppCompat.Button.Colored"/>
 </LinearLayout>
