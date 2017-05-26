@@ -8,18 +8,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.rv150.musictransfer.R;
-import com.rv150.musictransfer.model.Song;
-import com.rv150.musictransfer.network.WebSocketClient;
+import com.rv150.musictransfer.network.WebSocketSendClient;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,7 +23,7 @@ import butterknife.ButterKnife;
  * Created by ivan on 27.05.17.
  */
 
-public class SendingFragment extends Fragment implements WebSocketClient.SenderCallback {
+public class SendingFragment extends Fragment implements WebSocketSendClient.SenderCallback {
 
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
@@ -36,15 +31,14 @@ public class SendingFragment extends Fragment implements WebSocketClient.SenderC
     @BindView(R.id.status)
     TextView status;
 
-    private Executor networkExecutor = Executors.newSingleThreadExecutor();
 
-    private WebSocketClient webSocketClient;
+    private WebSocketSendClient webSocketSendClient;
 
     {
         try {
-            webSocketClient = WebSocketClient.getInstance();
+            webSocketSendClient = WebSocketSendClient.getInstance();
         } catch (IOException ex) {
-            Log.e(TAG, "Failed to create instance of webSocketClient! " + ex.getMessage());
+            Log.e(TAG, "Failed to create instance of webSocketSendClient! " + ex.getMessage());
         }
     }
 
@@ -54,15 +48,10 @@ public class SendingFragment extends Fragment implements WebSocketClient.SenderC
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.sending_fragment, container, false);
         ButterKnife.bind(this, view);
-        webSocketClient.setSenderCallback(this);
+        webSocketSendClient.setSenderCallback(this);
         return view;
     }
 
-
-    @Override
-    public void onTransferringAllowed() {
-
-    }
 
     @Override
     public void onConnected() {
@@ -70,18 +59,34 @@ public class SendingFragment extends Fragment implements WebSocketClient.SenderC
     }
 
     @Override
+    public void onDisconnected(boolean byServer) {
+
+    }
+
+
+
+
+    @Override
+    public void onSendingStarted() {
+        status.setText(R.string.sending);
+    }
+
+    @Override
     public void onProgressChanged(int progress) {
-        if (progress == 0) {
-            status.setText(R.string.sending);
-            return;
-        }
-
         progressBar.setProgress(progress);
+    }
 
-        if (progress == 100) {
-            status.setText(R.string.sending_has_finished);
-            status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
-        }
+    @Override
+    public void onSendingFinished() {
+        status.setText(R.string.sending_has_finished);
+        status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
+    }
+
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        webSocketSendClient.setSenderCallback(null);
     }
 
     @Override

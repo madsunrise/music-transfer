@@ -9,9 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
+import com.rv150.musictransfer.fragment.PrepareReceivingFragment;
 import com.rv150.musictransfer.fragment.ReceivingFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PrepareReceivingFragment.Callback {
 
     private Fragment currentFragment;
 
@@ -46,8 +47,8 @@ public class MainActivity extends AppCompatActivity {
                 changeFragment(new MusicListFragment(), false);
                 return true;
             case R.id.navigation_dashboard:
-                if (!(currentFragment instanceof ReceivingFragment)) {
-                    changeFragment(new ReceivingFragment(), false);
+                if (!(currentFragment instanceof PrepareReceivingFragment)) {
+                    changeFragment(new PrepareReceivingFragment(), false);
                 }
                 return true;
             case R.id.navigation_notifications:
@@ -55,4 +56,10 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     };
+
+
+    @Override
+    public void onReceivingStarted() {
+        changeFragment(new ReceivingFragment(), false);
+    }
 }

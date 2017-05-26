@@ -26,5 +26,7 @@
     <string name="wait_for_receiver">Ждем подтвердения от получателя&#8230;</string>
     <string name="sending">Отправка&#8230;</string>
     <string name="sending_has_finished">Передача завершена!</string>
+    <string name="receiving_file">Получение файла&#8230;</string>
+    <string name="file_has_been_received">Файл получен!</string>
 
 </resources>

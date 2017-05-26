@@ -10,14 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.neovisionaries.ws.client.WebSocketException;
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.model.Song;
-import com.rv150.musictransfer.network.WebSocketClient;
+import com.rv150.musictransfer.network.WebSocketSendClient;
 import com.rv150.musictransfer.utils.UiThread;
 
 import java.io.IOException;
@@ -33,7 +32,7 @@ import butterknife.OnClick;
  * Created by ivan on 10.05.17.
  */
 
-public class PrepareSendingFragment extends Fragment implements WebSocketClient.SenderCallback {
+public class PrepareSendingFragment extends Fragment implements WebSocketSendClient.CommonCallback {
 
     @BindView(R.id.sending_info)
     TextView info;
@@ -48,16 +47,16 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
 
     private Executor networkExecutor = Executors.newSingleThreadExecutor();
 
-    private WebSocketClient webSocketClient;
+    private WebSocketSendClient webSocketSendClient;
 
     private Callback activity;
 
     {
         try {
-            webSocketClient = WebSocketClient.getInstance();
+            webSocketSendClient = WebSocketSendClient.getInstance();
         }
         catch (IOException ex) {
-            Log.e(TAG, "Failed to create instance of webSocketClient! " + ex.getMessage());
+            Log.e(TAG, "Failed to create instance of webSocketSendClient! " + ex.getMessage());
         }
     }
 
@@ -78,7 +77,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
         if (song != null) {
             info.setText(String.format(getString(R.string.sending_songname), song.getTitle()));
         }
-        webSocketClient.setSenderCallback(this);
+        webSocketSendClient.setCommonCallback(this);
         connectWebSocket();
         return view;
     }
@@ -95,14 +94,14 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
         }
 
         activity.onSendingStarted();
-        networkExecutor.execute(() -> webSocketClient.registerSongForTransferring(song, code));
+        networkExecutor.execute(() -> webSocketSendClient.registerSongForTransferring(song, code));
     }
 
 
     private void connectWebSocket() {
         networkExecutor.execute(() -> {
             try {
-                webSocketClient.connect();
+                webSocketSendClient.connect();
             } catch (WebSocketException | IOException ex) {
                 UiThread.run(() -> {
                     Log.e(TAG, "Failed to connect to websocket! " + ex.getMessage());
@@ -113,9 +112,16 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
         });
     }
 
-    @Override
-    public void onTransferringAllowed() {
 
+    @Override
+    public void onConnected() {
+        sendBtn.setEnabled(true);
+    }
+
+
+    @Override
+    public void onDisconnected(boolean byServer) {
+        //TODO if network disappears
     }
 
     @Override
@@ -124,20 +130,11 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
     }
 
     @Override
-    public void onConnected() {
-        sendBtn.setEnabled(true);
-    }
-
-    @Override
     public void onDestroyView() {
         super.onDestroyView();
-        webSocketClient.setSenderCallback(null);
+        webSocketSendClient.setCommonCallback(null);
     }
 
-    @Override
-    public void onProgressChanged(int progress) {
-
-    }
 
 
     public interface Callback {
