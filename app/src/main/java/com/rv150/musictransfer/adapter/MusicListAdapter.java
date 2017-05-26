@@ -10,6 +10,7 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
 import com.rv150.musictransfer.model.Song;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ import java.util.List;
 
 public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyViewHolder> {
 
-    private final List<Song> songs;
+    private List<Song> songs;
     private final MusicListFragment feedFragment;
 
     public MusicListAdapter(List<Song> songs, MusicListFragment fragment) {
@@ -55,9 +56,14 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyVi
         }
     }
 
-    public void addSong(Song song) {
+    public void addItem(Song song) {
         songs.add(song);
         notifyItemInserted(songs.size() - 1);
+    }
+
+    public void setData(Song[] songs) {
+        this.songs = Arrays.asList(songs);
+        notifyDataSetChanged();
     }
 
     public List<Song> getSongs() {

@@ -9,11 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
-import com.rv150.musictransfer.network.WebSocketClient;
+import com.rv150.musictransfer.fragment.ReceivingFragment;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final MusicListFragment musicListFragment = new MusicListFragment();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        changeFragment(musicListFragment, false);
+        changeFragment(new MusicListFragment(), false);
     }
 
 
@@ -42,9 +41,10 @@ public class MainActivity extends AppCompatActivity {
             = item -> {
         switch (item.getItemId()) {
             case R.id.navigation_home:
+                changeFragment(new MusicListFragment(), false);
                 return true;
             case R.id.navigation_dashboard:
-                new Thread(() -> WebSocketClient.getInstance(MainActivity.this)).start();
+                changeFragment(new ReceivingFragment(), false);
                 return true;
             case R.id.navigation_notifications:
                 return true;

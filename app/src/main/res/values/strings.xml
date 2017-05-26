@@ -12,5 +12,11 @@
     <string name="receiver_with_this_id_not_found">Получатель с таким ID не найден!</string>
     <string name="receive">Принять</string>
     <string name="settings">Настройки</string>
-    <string name="start_sending">Начинаем отправку...</string>
+    <string name="start_sending">Начинаем отправку&#8230;</string>
+    <string name="connection_setup">Установка соединения&#8230;</string>
+    <string name="connection_error">Ошибка соединения!</string>
+    <string name="connection_established">Соединение установлено</string>
+    <string name="no_connection">Нет соединения</string>
+    <string name="your_id_is">Ваш ID: %d</string>
+    <string name="retry">Повторить</string>
 </resources>

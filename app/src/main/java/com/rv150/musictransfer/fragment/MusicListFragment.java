@@ -17,7 +17,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.activity.SendActivity;
@@ -29,7 +28,6 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rx.Observable;
-import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -46,19 +44,16 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
 
-
-
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "OnCreateView");
         View view = inflater.inflate(R.layout.music_list_fragment, container, false);
         ButterKnife.bind(this, view);
         setUpRecyclerView();
         updateList();
         return view;
     }
-
 
 
     private void setUpRecyclerView() {
@@ -89,14 +84,12 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         Observable.create(musicListGenerator)
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(song -> adapter.addSong(song),
-                e -> Toast.makeText(getContext(), R.string.internal_error, Toast.LENGTH_SHORT).show(),
-                () -> Log.d(TAG, "Completed")
-        );
+        .subscribe(songs -> adapter.setData(songs),
+                e -> Log.e(TAG, "EXCEPTION!"));
     }
 
 
-    private final Observable.OnSubscribe<Song> musicListGenerator = (subscriber) -> {
+    private final Observable.OnSubscribe<Song[]> musicListGenerator = (subscriber) -> {
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
 
@@ -118,22 +111,15 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
             throw new RuntimeException("Cursor is null!");
         }
 
-        final int animationLimit = 15;
+        Song[] songs = new Song[cursor.getCount()];
         int i = 0;
         while (cursor.moveToNext()) {
-            if (i < animationLimit) {
-                try {
-                    Thread.sleep(55);
-                } catch (Exception e) {
-                    Log.e(TAG, e.getMessage());
-                }
-            }
             String title = cursor.getString(0);
             String path = cursor.getString(1);
-            subscriber.onNext(new Song(title, path));
-            i++;
+            songs[i++] = new Song(title, path);
         }
         cursor.close();
+        subscriber.onNext(songs);
         subscriber.onCompleted();
     };
 

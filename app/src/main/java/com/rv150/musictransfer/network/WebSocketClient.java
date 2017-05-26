@@ -1,23 +1,16 @@
 package com.rv150.musictransfer.network;
 
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Environment;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
-import com.rv150.musictransfer.R;
+import com.neovisionaries.ws.client.WebSocketFrame;
 import com.rv150.musictransfer.utils.UiThread;
-
-import net.rdrei.android.dirchooser.DirectoryChooserActivity;
-import net.rdrei.android.dirchooser.DirectoryChooserConfig;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -46,30 +39,18 @@ public class WebSocketClient extends WebSocketAdapter {
     private WebSocket webSocket;
     private static final String SERVER_URL = "ws://212.109.192.197:8088/v1/ws";
     private final Gson gson = new Gson();
-    private int id = -1;
 
-    private static final int RC_DIRECTORY_PICKER_FILE = 0;
+    private Callback callback;
 
-    private WebSocketClient(Context activity) {
-        try {
-            this.activity = activity;
-            webSocket = new WebSocketFactory()
-                    .createSocket(SERVER_URL, 5000)
-                    .addListener(this)
-                    .connect();
-        }
-        catch (IOException | WebSocketException ex) {
-            Log.e(TAG, ex.getMessage());
-        }
+    public static final int CONNECTION_ERROR = 0;
+
+    private WebSocketClient() {
+
     }
 
-    private Context activity;
-    private static WebSocketClient instance;
+    private static WebSocketClient instance = new WebSocketClient();
 
-    public static synchronized WebSocketClient getInstance(Context activity) {
-        if (instance == null) {
-            instance = new WebSocketClient(activity);
-        }
+    public static WebSocketClient getInstance() throws IOException {
         return instance;
     }
 
@@ -87,7 +68,7 @@ public class WebSocketClient extends WebSocketAdapter {
             File file = new File(dir, currentFileName);
             if (!file.createNewFile()) {
                 Log.e(TAG, "Failed to create new file! Permissions?");
-                UiThread.run(() -> Toast.makeText(activity, R.string.internal_error, Toast.LENGTH_SHORT).show());
+                //UiThread.run(() -> Toast.makeText(activity, R.string.internal_error, Toast.LENGTH_SHORT).show());
                 return;
             }
             OutputStream os = new FileOutputStream(file);
@@ -103,19 +84,21 @@ public class WebSocketClient extends WebSocketAdapter {
         Message message = gson.fromJson(text, Message.class);
         switch (message.getType()) {
             case INITIALIZE_USER:
-                this.id = Integer.valueOf(message.getData());
-                Log.d(TAG, "Getting ID = " + this.id);
-                UiThread.run(() ->
-                        Toast.makeText(activity, "Your ID is " + id, Toast.LENGTH_LONG).show()
-                );
+                long id = Long.valueOf(message.getData());
+                Log.d(TAG, "Getting ID = " + id);
+                UiThread.run(() -> {
+                    if (callback != null) {
+                        callback.onIdRegistered(id);
+                    }
+                });
                 break;
 
 
             case SENDING_FINISHED:
                 Log.d(TAG, "FINISHED Receiving file!");
-                UiThread.run(() ->
-                        Toast.makeText(activity, R.string.downloading_has_finished, Toast.LENGTH_SHORT).show()
-                );
+//                UiThread.run(() ->
+//                        Toast.makeText(activity, R.string.downloading_has_finished, Toast.LENGTH_SHORT).show()
+//                );
                 outputStream.flush();
                 outputStream.close();
                 break;
@@ -123,13 +106,13 @@ public class WebSocketClient extends WebSocketAdapter {
             case REQUEST_SEND:
                 currentFileName = message.getData();
                 Log.d(TAG, "Getted request on sending " + currentFileName);
-                UiThread.run(() ->
-                        new AlertDialog.Builder(activity)
-                                .setMessage(String.format(activity.getString(R.string.do_you_want_to_accept_new_file), currentFileName))
-                                .setPositiveButton(R.string.yes, (d, w) -> sendAnswerOnRequest(true))
-                                .setNegativeButton(R.string.no, (d, w) -> sendAnswerOnRequest(false))
-                                .show()
-                );
+//                UiThread.run(() ->
+//                        new AlertDialog.Builder(activity)
+//                                .setMessage(String.format(activity.getString(R.string.do_you_want_to_accept_new_file), currentFileName))
+//                                .setPositiveButton(R.string.yes, (d, w) -> sendAnswerOnRequest(true))
+//                                .setNegativeButton(R.string.no, (d, w) -> sendAnswerOnRequest(false))
+//                                .show()
+//                );
 
                 break;
 
@@ -138,9 +121,9 @@ public class WebSocketClient extends WebSocketAdapter {
                 Log.d(TAG, "Error! " + message.getData());
                 switch (message.getData()) {
                     case RECEIVER_NOT_FOUND: {
-                        UiThread.run(() ->
-                                Toast.makeText(activity, R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show()
-                        );
+//                        UiThread.run(() ->
+//                                Toast.makeText(activity, R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show()
+//                        );
                         break;
                     }
                 }
@@ -148,9 +131,9 @@ public class WebSocketClient extends WebSocketAdapter {
 
             case ALLOW_TRANSFERRING:
                 Log.d(TAG, "Transfer has been approved, sending!");
-                UiThread.run(() ->
-                        Toast.makeText(activity, R.string.start_sending, Toast.LENGTH_SHORT).show()
-                );
+//                UiThread.run(() ->
+//                        Toast.makeText(activity, R.string.start_sending, Toast.LENGTH_SHORT).show()
+//                );
                 sendFile();
                 break;
 
@@ -159,6 +142,13 @@ public class WebSocketClient extends WebSocketAdapter {
         }
     }
 
+
+    public interface Callback {
+        void onIdRegistered(long id);
+        void onSendRequest(String fileName);
+        void onFileReceived();
+        void onError(int errorCode);
+    }
 
 
     private String path;
@@ -197,21 +187,25 @@ public class WebSocketClient extends WebSocketAdapter {
     }
 
 
-
-    private void showFilePicker() {
-        final Intent chooserIntent = new Intent(activity, DirectoryChooserActivity.class);
-        final DirectoryChooserConfig config = DirectoryChooserConfig.builder()
-                .newDirectoryName("New folder")
-                .allowReadOnlyDirectory(true)
-                .allowNewDirectoryNameModification(true)
-                .build();
-        chooserIntent.putExtra(DirectoryChooserActivity.EXTRA_CONFIG, config);
-       // activity.startActivityForResult(chooserIntent, RC_DIRECTORY_PICKER_FILE);
+    public void connect() throws WebSocketException, IOException {
+        webSocket = new WebSocketFactory()
+                .createSocket(SERVER_URL, 5000)
+                .addListener(this);
+        webSocket.connect();
+        Log.d(TAG, "Connected!");
     }
 
+    public void disconnect() {
+        webSocket.disconnect();
+        Log.d(TAG, "Disconnected!");
+    }
 
-    public WebSocket getWebSocket() {
-        return webSocket;
+    public boolean isConnected() {
+        return webSocket.isOpen();
+    }
+
+    public void setCallback(Callback callback) {
+        this.callback = callback;
     }
 
     private void sendFinishSignal() {
@@ -226,6 +220,33 @@ public class WebSocketClient extends WebSocketAdapter {
         }
     }
 
+    @Override
+    public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws Exception {
+        super.onDisconnected(websocket, serverCloseFrame, clientCloseFrame, closedByServer);
+        if (closedByServer) {
+            Log.d(TAG, "Connection was closed by server");
+            return;
+        }
+        Log.d(TAG, "Disconnected!");
+        UiThread.run(() -> {
+                    if (callback != null) {
+                        callback.onError(CONNECTION_ERROR);
+                    }
+                }
+        );
+    }
+
+    @Override
+    public void onConnectError(WebSocket websocket, WebSocketException exception) throws Exception {
+        super.onConnectError(websocket, exception);
+        Log.d(TAG, "Connection error! Reason: " + exception.getMessage());
+        UiThread.run(() -> {
+                if (callback != null) {
+                    callback.onError(CONNECTION_ERROR);
+                }
+            }
+        );
+    }
 
     private static final String TAG = WebSocketClient.class.getSimpleName();
 }
