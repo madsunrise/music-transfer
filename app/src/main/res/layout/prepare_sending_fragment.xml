@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="40dp">
+        android:layout_marginTop="75dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -52,18 +52,4 @@
         android:layout_gravity="end"
         android:enabled="false"
         style="@style/Widget.AppCompat.Button.Colored"/>
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:max="100"
-        android:progress="0"
-        android:visibility="invisible"
-        android:layout_marginTop="40dp"/>
-
-
-
-
 </LinearLayout>

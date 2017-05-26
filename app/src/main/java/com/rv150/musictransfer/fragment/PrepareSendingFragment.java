@@ -1,5 +1,6 @@
 package com.rv150.musictransfer.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -43,14 +44,13 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
     @BindView(R.id.send)
     Button sendBtn;
 
-    @BindView(R.id.progress_bar)
-    ProgressBar progressBar;
-
     private Song song;
 
     private Executor networkExecutor = Executors.newSingleThreadExecutor();
 
     private WebSocketClient webSocketClient;
+
+    private Callback activity;
 
     {
         try {
@@ -61,6 +61,12 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
         }
     }
 
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        activity = (Callback) context;
+    }
 
     @Nullable
     @Override
@@ -87,13 +93,9 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
             Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
             return;
         }
-        networkExecutor.execute(() -> {
-            webSocketClient.registerSongForTransferring(song, code);
-          //  webSocketClient.getWebSocket().sendText(new Gson().toJson(message));    // TODO NPE
 
-            String path = song.getPath();
-           // webSocketClient.registerFileToSend(path);
-        });
+        activity.onSendingStarted();
+        networkExecutor.execute(() -> webSocketClient.registerSongForTransferring(song, code));
     }
 
 
@@ -134,11 +136,12 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
 
     @Override
     public void onProgressChanged(int progress) {
-        if (progress == 0) {
-            progressBar.setVisibility(View.VISIBLE);
-            return;
-        }
-        progressBar.setProgress(progress);
+
+    }
+
+
+    public interface Callback {
+        void onSendingStarted(); // Сменить фрагмент
     }
 
     private static final String TAG = PrepareSendingFragment.class.getSimpleName();
