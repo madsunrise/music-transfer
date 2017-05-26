@@ -63,8 +63,9 @@ public class ReceivingFragment extends Fragment implements WebSocketClient.Callb
            try {
                webSocketClient.connect();
            }
-           catch (WebSocketException ex) {
+           catch (WebSocketException | IOException ex) {
                UiThread.run(() -> {
+                   Log.e(TAG, "Failed to create websocket! " + ex.getMessage());
                    Toast.makeText(getContext(),
                            R.string.failed_to_setup_connection, Toast.LENGTH_SHORT).show();
                    status.setText(R.string.no_connection);

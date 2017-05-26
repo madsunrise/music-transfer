@@ -43,18 +43,13 @@ public class WebSocketClient extends WebSocketAdapter {
 
     public static final int CONNECTION_ERROR = 0;
 
-    private WebSocketClient() throws IOException {
-        webSocket = new WebSocketFactory()
-                .createSocket(SERVER_URL, 5000)
-                .addListener(this);
+    private WebSocketClient() {
+
     }
 
-    private static WebSocketClient instance;
+    private static WebSocketClient instance = new WebSocketClient();
 
-    public static synchronized WebSocketClient getInstance() throws IOException {
-        if (instance == null) {
-            instance = new WebSocketClient();
-        }
+    public static WebSocketClient getInstance() throws IOException {
         return instance;
     }
 
@@ -191,7 +186,10 @@ public class WebSocketClient extends WebSocketAdapter {
     }
 
 
-    public void connect() throws WebSocketException {
+    public void connect() throws WebSocketException, IOException {
+        webSocket = new WebSocketFactory()
+                .createSocket(SERVER_URL, 5000)
+                .addListener(this);
         webSocket.connect();
         Log.d(TAG, "Connected!");
     }

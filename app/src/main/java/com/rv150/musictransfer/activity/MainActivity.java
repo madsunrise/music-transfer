@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
                 changeFragment(new MusicListFragment(), false);
                 return true;
             case R.id.navigation_dashboard:
-                changeFragment(new ReceivingFragment(), true);
+                changeFragment(new ReceivingFragment(), false);
                 return true;
             case R.id.navigation_notifications:
                 return true;
