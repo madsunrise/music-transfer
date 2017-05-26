@@ -71,7 +71,7 @@ public class WebSocketClient extends WebSocketAdapter {
     }
 
     public interface SenderCallback {
-        void onTransferingAllowed();
+        void onTransferringAllowed();
         void onConnected();
         void onProgressChanged(int progress);
         void onError(int errorCode);
@@ -164,8 +164,8 @@ public class WebSocketClient extends WebSocketAdapter {
 
 
 
-    public void registerSongForTransfering(Song song, String receiverId) {
-        Log.d(TAG, "Registered song " + song.getTitle() + " for transfering to " + receiverId);
+    public void registerSongForTransferring(Song song, String receiverId) {
+        Log.d(TAG, "Registered song " + song.getTitle() + " for transferring to " + receiverId);
         SendRequest request = new SendRequest(receiverId, song.getTitle());
         Message message = new Message(RECEIVER_ID, gson.toJson(request));
         webSocket.sendText(gson.toJson(message));

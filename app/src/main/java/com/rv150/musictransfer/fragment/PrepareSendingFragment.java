@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +42,9 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
 
     @BindView(R.id.send)
     Button sendBtn;
+
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
 
     private Song song;
 
@@ -84,7 +88,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
             return;
         }
         networkExecutor.execute(() -> {
-            webSocketClient.registerSongForTransfering(song, code);
+            webSocketClient.registerSongForTransferring(song, code);
           //  webSocketClient.getWebSocket().sendText(new Gson().toJson(message));    // TODO NPE
 
             String path = song.getPath();
@@ -108,7 +112,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
     }
 
     @Override
-    public void onTransferingAllowed() {
+    public void onTransferringAllowed() {
 
     }
 
@@ -130,7 +134,11 @@ public class PrepareSendingFragment extends Fragment implements WebSocketClient.
 
     @Override
     public void onProgressChanged(int progress) {
-
+        if (progress == 0) {
+            progressBar.setVisibility(View.VISIBLE);
+            return;
+        }
+        progressBar.setProgress(progress);
     }
 
     private static final String TAG = PrepareSendingFragment.class.getSimpleName();
