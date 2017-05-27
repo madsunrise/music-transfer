@@ -51,7 +51,7 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
     private String currentFileName = null;
 
 
-    private interface CommonCallback {
+    public interface CommonCallback {
         void onConnected();
         void onDisconnected(boolean byServer);
     }
@@ -198,12 +198,16 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
     }
 
 
-    public void setPrepareCallback(PrepareCallback prepareCallback) {
-        this.prepareCallback = prepareCallback;
-    }
-
-    public void setReceiverCallback(ReceiverCallback receiverCallback) {
-        this.receiverCallback = receiverCallback;
+    // Привязан должен быть только один коллбек в один момент времени
+    public void setCallback(CommonCallback callback) {
+        if (callback instanceof PrepareCallback) {
+            prepareCallback = (PrepareCallback) callback;
+            receiverCallback = null;
+        }
+        else {
+            receiverCallback = (ReceiverCallback) callback;
+            prepareCallback = null;
+        }
     }
 
     private static final String TAG = WebSocketReceiveClient.class.getSimpleName();

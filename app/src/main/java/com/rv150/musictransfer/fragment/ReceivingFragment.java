@@ -50,7 +50,7 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
         View view = inflater.inflate(R.layout.receiving_fragment, container, false);
         ButterKnife.bind(this, view);
         Log.d(TAG, "OnCreateView!");
-        webSocketClient.setReceiverCallback(this);
+        webSocketClient.setCallback(this);
         return view;
     }
 
@@ -77,7 +77,7 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        webSocketClient.setReceiverCallback(null);
+        webSocketClient.setCallback(null);
     }
 
 

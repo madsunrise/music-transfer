@@ -76,7 +76,7 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.prepare_receiving_fragment, container, false);
         ButterKnife.bind(this, view);
-        webSocketClient.setPrepareCallback(this);
+        webSocketClient.setCallback(this);
         connectToWebsocket();
         return view;
     }
@@ -157,7 +157,7 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        webSocketClient.setPrepareCallback(null);
+        webSocketClient.setCallback(null);
     }
 
     public interface Callback {

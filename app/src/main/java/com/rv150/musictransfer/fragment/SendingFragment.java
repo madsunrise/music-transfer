@@ -48,7 +48,7 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.sending_fragment, container, false);
         ButterKnife.bind(this, view);
-        webSocketSendClient.setSenderCallback(this);
+        webSocketSendClient.setCallback(this);
         return view;
     }
 
@@ -86,7 +86,7 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        webSocketSendClient.setSenderCallback(null);
+        webSocketSendClient.setCallback(null);
     }
 
     @Override

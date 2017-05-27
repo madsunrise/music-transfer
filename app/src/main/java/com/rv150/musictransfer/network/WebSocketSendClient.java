@@ -19,9 +19,11 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import static com.rv150.musictransfer.network.Message.ALLOW_TRANSFERRING;
 import static com.rv150.musictransfer.network.Message.ERROR;
+import static com.rv150.musictransfer.network.Message.RECEIVER_FOUND;
 import static com.rv150.musictransfer.network.Message.RECEIVER_ID;
 import static com.rv150.musictransfer.network.Message.RECEIVER_NOT_FOUND;
 import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
@@ -33,7 +35,7 @@ import static com.rv150.musictransfer.utils.Config.WEBSOCKET_URL;
  */
 
 public class WebSocketSendClient extends WebSocketAdapter {
-    public static final int RECEIVER_NOT_FOUND_ERR = 0;
+
 
     private WebSocket webSocket;
 
@@ -57,36 +59,41 @@ public class WebSocketSendClient extends WebSocketAdapter {
         void onError(int errorCode);
     }
 
+    public interface PrepareCallback extends CommonCallback {
+        void onReceiverFound(boolean found);
+    }
+
     public interface SenderCallback extends CommonCallback {
         void onSendingStarted();
         void onProgressChanged(int progress);
         void onSendingFinished();
     }
 
-    private CommonCallback commonCallback;
+    private PrepareCallback prepareCallback;
     private SenderCallback senderCallback;
 
 
     @Override
     public void onTextMessage(WebSocket websocket, String text) throws Exception {
         Message message = gson.fromJson(text, Message.class);
+        try {
+            Thread.sleep(1400);
+        }
+        catch (Exception e) {
+
+        }
         switch (message.getType()) {
-            case ERROR: {
-                Log.d(TAG, "Error! " + message.getData());
-                switch (message.getData()) {
-                    case RECEIVER_NOT_FOUND: {
-                        UiThread.run(() -> {
-                            if (senderCallback != null) {
-                                senderCallback.onError(RECEIVER_NOT_FOUND_ERR);
-                            }
-                        });
-                        break;
+
+            case RECEIVER_FOUND: {
+                Log.d(TAG, "Receiver was found, waiting for confirmation...");
+                UiThread.run(() -> {
+                    if (prepareCallback != null) {
+                        prepareCallback.onReceiverFound(true);
                     }
-                    default:
-                        break;
-                }
+                });
                 break;
             }
+
 
             case ALLOW_TRANSFERRING: {
                 Log.d(TAG, "Transfer has been approved, start sending!");
@@ -96,6 +103,23 @@ public class WebSocketSendClient extends WebSocketAdapter {
                     }
                 });
                 sendFile();
+                break;
+            }
+
+            case ERROR: {
+                Log.d(TAG, "Error! " + message.getData());
+                switch (message.getData()) {
+                    case RECEIVER_NOT_FOUND: {
+                        UiThread.run(() -> {
+                            if (prepareCallback != null) {
+                                prepareCallback.onReceiverFound(false);
+                            }
+                        });
+                        break;
+                    }
+                    default:
+                        break;
+                }
                 break;
             }
 
@@ -168,7 +192,7 @@ public class WebSocketSendClient extends WebSocketAdapter {
     }
 
     public boolean isConnected() {
-        return webSocket.isOpen();
+        return webSocket != null && webSocket.isOpen();
     }
 
 
@@ -213,13 +237,15 @@ public class WebSocketSendClient extends WebSocketAdapter {
         Log.d(TAG, "Connection ERROR!!! Reason: " + exception.getMessage());
     }
 
-
-    public void setCommonCallback(CommonCallback commonCallback) {
-        this.commonCallback = commonCallback;
-    }
-
-    public void setSenderCallback(SenderCallback senderCallback) {
-        this.senderCallback = senderCallback;
+    public void setCallback(CommonCallback callback) {
+        if (callback instanceof PrepareCallback) {
+            prepareCallback = (PrepareCallback) callback;
+            senderCallback = null;
+        }
+        else {
+            prepareCallback = null;
+            senderCallback = (SenderCallback) callback;
+        }
     }
 
     private static final String TAG = WebSocketSendClient.class.getSimpleName();

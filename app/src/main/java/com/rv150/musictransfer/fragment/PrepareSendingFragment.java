@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,7 +33,7 @@ import butterknife.OnClick;
  * Created by ivan on 10.05.17.
  */
 
-public class PrepareSendingFragment extends Fragment implements WebSocketSendClient.CommonCallback {
+public class PrepareSendingFragment extends Fragment implements WebSocketSendClient.PrepareCallback {
 
     @BindView(R.id.sending_info)
     TextView info;
@@ -42,6 +43,9 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
 
     @BindView(R.id.send)
     Button sendBtn;
+
+    @BindView(R.id.progress_bar)
+    ProgressBar progressBar;
 
     private Song song;
 
@@ -77,8 +81,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         if (song != null) {
             info.setText(String.format(getString(R.string.sending_songname), song.getTitle()));
         }
-        webSocketSendClient.setCommonCallback(this);
-        connectWebSocket();
+        webSocketSendClient.setCallback(this);
         return view;
     }
 
@@ -92,8 +95,10 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
             Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
             return;
         }
-
-        activity.onSendingStarted();
+        if (!webSocketSendClient.isConnected()) {
+            connectWebSocket();
+        }
+        setUiEnabled(false);
         networkExecutor.execute(() -> webSocketSendClient.registerSongForTransferring(song, code));
     }
 
@@ -115,13 +120,23 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
 
     @Override
     public void onConnected() {
-        sendBtn.setEnabled(true);
+
     }
 
 
     @Override
     public void onDisconnected(boolean byServer) {
         //TODO if network disappears
+    }
+
+    @Override
+    public void onReceiverFound(boolean found) {
+        if (found) {
+            activity.onSendingStarted();
+            return;
+        }
+        Toast.makeText(getContext(), R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show();
+        setUiEnabled(true);
     }
 
     @Override
@@ -132,7 +147,19 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        webSocketSendClient.setCommonCallback(null);
+        webSocketSendClient.setCallback(null);
+    }
+
+
+    private void setUiEnabled(boolean enabled) {
+        if (enabled) {
+            sendBtn.setEnabled(true);
+            progressBar.setVisibility(View.INVISIBLE);
+        }
+        else {
+            sendBtn.setEnabled(false);
+            progressBar.setVisibility(View.VISIBLE);
+        }
     }
 
 
