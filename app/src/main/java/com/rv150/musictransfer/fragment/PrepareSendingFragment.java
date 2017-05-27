@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -82,6 +84,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
             info.setText(String.format(getString(R.string.sending_songname), song.getTitle()));
         }
         webSocketSendClient.setCallback(this);
+        setOnTextChangedListener();
         return view;
     }
 
@@ -89,12 +92,6 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
     @OnClick(R.id.send)
     public void send() {
         final String code = receiverCode.getText().toString();
-        int idLength = getResources().getInteger(R.integer.id_length);
-        if (code.length() < idLength) {
-            String msg = String.format(getString(R.string.id_must_consist_of_n_digits), idLength);
-            Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
-            return;
-        }
         if (!webSocketSendClient.isConnected()) {
             connectWebSocket();
         }
@@ -160,6 +157,31 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
             sendBtn.setEnabled(false);
             progressBar.setVisibility(View.VISIBLE);
         }
+    }
+
+
+    private void setOnTextChangedListener() {
+        receiverCode.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() == getResources().getInteger(R.integer.id_length)) {
+                    sendBtn.setEnabled(true);
+                }
+                else {
+                    sendBtn.setEnabled(false);
+                }
+            }
+        });
     }
 
 
