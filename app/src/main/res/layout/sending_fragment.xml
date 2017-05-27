@@ -20,4 +20,14 @@
         android:textSize="20sp"
         android:text="@string/wait_for_receiver"/>
 
+    <Button
+        android:id="@+id/menu_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/main_menu"
+        android:layout_marginTop="50dp"
+        android:visibility="invisible"
+        android:layout_gravity="end"
+        style="@style/Widget.AppCompat.Button.Colored" />
+
 </LinearLayout>

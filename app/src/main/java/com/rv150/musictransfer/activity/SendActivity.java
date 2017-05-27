@@ -38,6 +38,7 @@ public class SendActivity extends AppCompatActivity implements PrepareSendingFra
 
     @Override
     public void onSendingStarted() {
-        changeFragment(new SendingFragment(), true);
+        changeFragment(new SendingFragment(), false);
     }
+
 }

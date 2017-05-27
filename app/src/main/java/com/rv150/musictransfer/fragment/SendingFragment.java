@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -18,6 +19,7 @@ import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * Created by ivan on 27.05.17.
@@ -30,6 +32,9 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
 
     @BindView(R.id.status)
     TextView status;
+
+    @BindView(R.id.menu_button)
+    Button menuButton;
 
 
     private WebSocketSendClient webSocketSendClient;
@@ -80,6 +85,7 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
     public void onSendingFinished() {
         status.setText(R.string.sending_has_finished);
         status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
+        menuButton.setVisibility(View.VISIBLE);
     }
 
 
@@ -87,11 +93,17 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
     public void onDestroyView() {
         super.onDestroyView();
         webSocketSendClient.setCallback(null);
+        webSocketSendClient.disconnect();
     }
 
     @Override
     public void onError(int errorCode) {
 
+    }
+
+    @OnClick(R.id.menu_button)
+    void backToMenu() {
+        getActivity().finish();
     }
 
     private static final String TAG = SendingFragment.class.getSimpleName();

@@ -76,12 +76,6 @@ public class WebSocketSendClient extends WebSocketAdapter {
     @Override
     public void onTextMessage(WebSocket websocket, String text) throws Exception {
         Message message = gson.fromJson(text, Message.class);
-        try {
-            Thread.sleep(1400);
-        }
-        catch (Exception e) {
-
-        }
         switch (message.getType()) {
 
             case RECEIVER_FOUND: {
@@ -96,10 +90,11 @@ public class WebSocketSendClient extends WebSocketAdapter {
 
 
             case ALLOW_TRANSFERRING: {
+                // TODO May be some sleep for 100-200 ms?
                 Log.d(TAG, "Transfer has been approved, start sending!");
                 UiThread.run(() -> {
                     if (senderCallback != null) {
-                        senderCallback.onProgressChanged(0);
+                        senderCallback.onSendingStarted();
                     }
                 });
                 sendFile();
@@ -167,8 +162,12 @@ public class WebSocketSendClient extends WebSocketAdapter {
                 Log.d(TAG, "Sended " + percentage + "%");
                 i++;
             }
-
             sendFinishSignal();
+            UiThread.run(() -> {
+                if (senderCallback != null) {
+                    senderCallback.onSendingFinished();
+                }
+            });
             Log.d(TAG, "Transferring has been finished");
         } catch (IOException ex) {
             Log.e(TAG, ex.getMessage());
@@ -188,7 +187,7 @@ public class WebSocketSendClient extends WebSocketAdapter {
 
     public void disconnect() {
         webSocket.disconnect();
-        Log.d(TAG, "Disconnected!");
+        Log.d(TAG, "Disconnect method called!");
     }
 
     public boolean isConnected() {
