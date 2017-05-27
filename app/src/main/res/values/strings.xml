@@ -29,5 +29,7 @@
     <string name="receiving_file">Получение файла&#8230;</string>
     <string name="file_has_been_received">Файл получен!</string>
     <string name="main_menu">Главное меню</string>
+    <string name="file_not_found_or_corrupted">Файл не найден либо поврежден</string>
+    <string name="failed_to_create_file">Не удается создать файл на диске</string>
 
 </resources>

@@ -10,21 +10,25 @@ import android.os.Parcelable;
 public class Song implements Parcelable {
     private final String title;
     private final String path;
+    private final long size;
 
-    public Song(String title, String path) {
+    public Song(String title, String path, long size) {
         this.title = title;
         this.path = path;
+        this.size = size;
     }
 
     private Song(Parcel in) {
         title = in.readString();
         path = in.readString();
+        size = in.readLong();
     }
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
         out.writeString(title);
         out.writeString(path);
+        out.writeLong(size);
     }
 
     @Override
@@ -50,5 +54,9 @@ public class Song implements Parcelable {
 
     public String getPath() {
         return path;
+    }
+
+    public long getSize() {
+        return size;
     }
 }

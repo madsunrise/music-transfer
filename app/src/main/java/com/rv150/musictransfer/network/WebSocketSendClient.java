@@ -27,6 +27,7 @@ import static com.rv150.musictransfer.network.Message.RECEIVER_FOUND;
 import static com.rv150.musictransfer.network.Message.RECEIVER_ID;
 import static com.rv150.musictransfer.network.Message.RECEIVER_NOT_FOUND;
 import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
+import static com.rv150.musictransfer.utils.Config.BUFFER_SIZE;
 import static com.rv150.musictransfer.utils.Config.WEBSOCKET_URL;
 
 
@@ -128,7 +129,7 @@ public class WebSocketSendClient extends WebSocketAdapter {
 
     public void registerSongForTransferring(Song song, String receiverId) {
         Log.d(TAG, "Registered song " + song.getTitle() + " for transferring to " + receiverId);
-        SendRequest request = new SendRequest(receiverId, song.getTitle());
+        SendRequest request = new SendRequest(song.getTitle(), song.getSize(), receiverId);
         Message message = new Message(RECEIVER_ID, gson.toJson(request));
         webSocket.sendText(gson.toJson(message));
         this.songForTransfer = song;
@@ -142,7 +143,6 @@ public class WebSocketSendClient extends WebSocketAdapter {
             Log.e(TAG, "Error sending file - songForTransfer is null!");
             return;
         }
-        int BUFFER_SIZE = 16 * 1024;
         File file = new File(songForTransfer.getPath());
         try {
             InputStream is = new FileInputStream(file);

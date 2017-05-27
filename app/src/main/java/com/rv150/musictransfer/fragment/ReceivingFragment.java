@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.network.WebSocketReceiveClient;
@@ -18,6 +19,8 @@ import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static com.rv150.musictransfer.network.WebSocketReceiveClient.FILE_CREATION_ERROR;
 
 /**
  * Created by ivan on 27.05.17.
@@ -49,7 +52,6 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.receiving_fragment, container, false);
         ButterKnife.bind(this, view);
-        Log.d(TAG, "OnCreateView!");
         webSocketClient.setCallback(this);
         return view;
     }
@@ -80,10 +82,19 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
         webSocketClient.setCallback(null);
     }
 
+    @Override
+    public void onError(int errorCode) {
+        switch (errorCode) {
+            case FILE_CREATION_ERROR: {
+                Toast.makeText(getContext(), R.string.failed_to_create_file, Toast.LENGTH_SHORT).show();
+                break;
+            }
+        }
+    }
 
     @Override
-    public void onProgressChanged() {
-
+    public void onProgressChanged(int percentage) {
+        progressBar.setProgress(percentage);
     }
 
     private static final String TAG = ReceivingFragment.class.getSimpleName();

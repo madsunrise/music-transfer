@@ -17,12 +17,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.activity.SendActivity;
 import com.rv150.musictransfer.adapter.MusicListAdapter;
 import com.rv150.musictransfer.model.Song;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -75,6 +77,10 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
+        if (item.getSize() == 0) {
+            Toast.makeText(getContext(), R.string.file_not_found_or_corrupted, Toast.LENGTH_SHORT).show();
+            return;
+        }
         Intent intent = new Intent(getContext(), SendActivity.class);
         intent.putExtra(Song.class.getSimpleName(), item);
         startActivity(intent);
@@ -116,13 +122,19 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         while (cursor.moveToNext()) {
             String title = cursor.getString(0);
             String path = cursor.getString(1);
-            songs[i++] = new Song(title, path);
+            long size = getSizeFromPath(path);
+            songs[i++] = new Song(title, path, size);
         }
         cursor.close();
         subscriber.onNext(songs);
         subscriber.onCompleted();
     };
 
+
+    private long getSizeFromPath(String path) {
+        File file = new File(path);
+        return file.length();
+    }
 
 
 

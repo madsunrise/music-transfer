@@ -130,8 +130,10 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     }
 
 
+    @Override
+    public void onError(int errorCode) {
 
-
+    }
 
     @OnClick(R.id.retry)
     void connectToWebsocket() {

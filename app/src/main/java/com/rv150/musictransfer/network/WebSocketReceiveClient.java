@@ -23,6 +23,7 @@ import static com.rv150.musictransfer.network.Message.ANSWER_ON_REQUEST;
 import static com.rv150.musictransfer.network.Message.INITIALIZE_USER;
 import static com.rv150.musictransfer.network.Message.REQUEST_SEND;
 import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
+import static com.rv150.musictransfer.utils.Config.BUFFER_SIZE;
 import static com.rv150.musictransfer.utils.Config.WEBSOCKET_URL;
 
 /**
@@ -35,7 +36,7 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
 
     private final Gson gson = new Gson();
 
-    public static final int CONNECTION_ERROR = 0;
+    public static final int FILE_CREATION_ERROR = 0;
 
     private WebSocketReceiveClient() {
 
@@ -49,11 +50,13 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
 
     private BufferedOutputStream outputStream = null;
     private String currentFileName = null;
+    private long currentFileSize = 0;
 
 
     public interface CommonCallback {
         void onConnected();
         void onDisconnected(boolean byServer);
+        void onError(int errorCode);
     }
 
     public interface PrepareCallback extends CommonCallback {
@@ -62,13 +65,15 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
     }
 
     public interface ReceiverCallback extends CommonCallback {
-        void onProgressChanged();
+        void onProgressChanged(int percentage);
         void onFileReceivingFinished();
     }
 
 
     private PrepareCallback prepareCallback;
     private ReceiverCallback receiverCallback;
+
+    private int iteration = 1;
 
 
     @Override
@@ -82,7 +87,7 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
             File file = new File(dir, currentFileName);
             if (!file.createNewFile()) {
                 Log.e(TAG, "Failed to create new file! Permissions?");
-                //UiThread.run(() -> Toast.makeText(activity, R.string.internal_error, Toast.LENGTH_SHORT).show());
+                receiverCallback.onError(FILE_CREATION_ERROR);
                 return;
             }
             OutputStream os = new FileOutputStream(file);
@@ -90,6 +95,14 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
             Log.d(TAG, "Output stream was initialized");
         }
         outputStream.write(binary);
+        final int percentage = (int)((double)(iteration * BUFFER_SIZE * 100) / currentFileSize);
+        Log.d(TAG, "Receiving file: " + percentage + "%");
+        UiThread.run(() -> {
+            if (receiverCallback != null) {
+                receiverCallback.onProgressChanged(percentage);
+            }
+        });
+        iteration++;
     }
 
 
@@ -120,8 +133,10 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
                 break;
 
             case REQUEST_SEND:
-                currentFileName = message.getData();
-                Log.d(TAG, "Getted request on sending " + currentFileName);
+                SendRequest request = gson.fromJson(message.getData(), SendRequest.class);
+                currentFileName = request.getFileName();
+                currentFileSize = request.getFileSize();
+                Log.d(TAG, "Getted request on sending " + currentFileName + " (" + currentFileSize + " bytes)");
                 UiThread.run(() -> {
                     if (prepareCallback != null) {
                         prepareCallback.onFileSendingRequest(currentFileName);

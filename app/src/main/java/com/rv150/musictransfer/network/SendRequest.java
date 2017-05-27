@@ -5,11 +5,28 @@ package com.rv150.musictransfer.network;
  */
 
 public class SendRequest {
-    private final String fileName;
-    private final String receiverId;
+    private String fileName;
+    private long fileSize;
+    private String receiverId;
 
-    public SendRequest(String receiverId, String fileName) {
+    public SendRequest() {
+    }
+
+    public SendRequest(String fileName, long fileSize, String receiverId) {
         this.fileName = fileName;
+        this.fileSize = fileSize;
         this.receiverId = receiverId;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public long getFileSize() {
+        return fileSize;
+    }
+
+    public String getReceiverId() {
+        return receiverId;
     }
 }
