@@ -1,6 +1,9 @@
 language: android
 sudo: required
 jdk: oraclejdk8
+notifications:
+  slack:
+    on_success: never
 
 before_cache:
 
