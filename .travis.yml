@@ -26,7 +26,7 @@ env:
 
  - ANDROID_BUILD_TOOLS=25.0.2
 
- - ADB_INSTALL_TIMEOUT=5 # minutes
+ - ADB_INSTALL_TIMEOUT=7 # minutes
 
 android:
 
@@ -45,8 +45,6 @@ android:
  - extra-google-m2repository
 
  - extra-android-m2repository # for design library
-
- - addon-google_apis-google-19 # google play services
 
  - sys-img-armeabi-v7a-addon-google_apis-google-$ANDROID_API_LEVEL
 
