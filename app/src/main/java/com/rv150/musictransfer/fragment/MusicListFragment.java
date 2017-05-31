@@ -39,62 +39,8 @@ import rx.schedulers.Schedulers;
 
 public class MusicListFragment extends Fragment implements View.OnClickListener {
 
-    @BindView(R.id.music_recycler_view)
-    RecyclerView recyclerView;
-
-    private MusicListAdapter adapter;
-
     private static final int REQUEST_READ_EXT_STORAGE = 0;
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "OnCreateView");
-        View view = inflater.inflate(R.layout.music_list_fragment, container, false);
-        ButterKnife.bind(this, view);
-        setUpRecyclerView();
-        updateList();
-        return view;
-    }
-
-
-    private void setUpRecyclerView() {
-        LinearLayoutManager llm = new LinearLayoutManager(getContext());
-        llm.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(llm);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setOnClickListener(this);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                DividerItemDecoration.VERTICAL);
-        recyclerView.addItemDecoration(dividerItemDecoration);
-        adapter = new MusicListAdapter(new ArrayList<>(), this);
-        recyclerView.setAdapter(adapter);
-    }
-
-
-
-    @Override
-    public void onClick(View v) {
-        int itemPosition = recyclerView.getChildLayoutPosition(v);
-        Song item = adapter.getSongs().get(itemPosition);
-        if (item.getSize() == 0) {
-            Toast.makeText(getContext(), R.string.file_not_found_or_corrupted, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent(getContext(), SendActivity.class);
-        intent.putExtra(Song.class.getSimpleName(), item);
-        startActivity(intent);
-    }
-
-    private void updateList() {
-        Observable.create(musicListGenerator)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(songs -> adapter.setData(songs),
-                e -> Log.e(TAG, "EXCEPTION!"));
-    }
-
-
+    private static final String TAG = MusicListFragment.class.getSimpleName();
     private final Observable.OnSubscribe<Song[]> musicListGenerator = (subscriber) -> {
         int permissionCheck = ContextCompat.checkSelfPermission(getContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -129,14 +75,59 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         subscriber.onNext(songs);
         subscriber.onCompleted();
     };
+    @BindView(R.id.music_recycler_view)
+    RecyclerView recyclerView;
+    private MusicListAdapter adapter;
 
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "OnCreateView");
+        View view = inflater.inflate(R.layout.music_list_fragment, container, false);
+        ButterKnife.bind(this, view);
+        setUpRecyclerView();
+        updateList();
+        return view;
+    }
+
+    private void setUpRecyclerView() {
+        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        llm.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(llm);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setOnClickListener(this);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(dividerItemDecoration);
+        adapter = new MusicListAdapter(new ArrayList<>(), this);
+        recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onClick(View v) {
+        int itemPosition = recyclerView.getChildLayoutPosition(v);
+        Song item = adapter.getSongs().get(itemPosition);
+        if (item.getSize() == 0) {
+            Toast.makeText(getContext(), R.string.file_not_found_or_corrupted, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(getContext(), SendActivity.class);
+        intent.putExtra(Song.class.getSimpleName(), item);
+        startActivity(intent);
+    }
+
+    private void updateList() {
+        Observable.create(musicListGenerator)
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(songs -> adapter.setData(songs),
+                e -> Log.e(TAG, "EXCEPTION!" + e));
+    }
 
     private long getSizeFromPath(String path) {
         File file = new File(path);
         return file.length();
     }
-
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -153,6 +144,4 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
                 break;
         }
     }
-
-    private static final String TAG = MusicListFragment.class.getSimpleName();
 }

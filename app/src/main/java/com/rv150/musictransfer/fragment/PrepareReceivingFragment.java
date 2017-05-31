@@ -1,6 +1,7 @@
 package com.rv150.musictransfer.fragment;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,10 +12,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.zxing.WriterException;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.network.WebSocketReceiveClient;
@@ -28,6 +31,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static com.rv150.musictransfer.utils.Utils.encodeAsBitmap;
+
 
 /**
  * Created by ivan on 26.05.17.
@@ -35,35 +40,29 @@ import butterknife.OnClick;
 
 public class PrepareReceivingFragment extends Fragment implements WebSocketReceiveClient.PrepareCallback {
 
+    private static final String TAG = PrepareReceivingFragment.class.getSimpleName();
+    private final Executor networkExecutor = Executors.newSingleThreadExecutor();
     @BindView(R.id.status)
     TextView status;
-
     @BindView(R.id.your_id)
     TextView yourId;
-
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
-
+    @BindView(R.id.qr)
+    ImageView imageView;
     @BindView(R.id.retry)
     Button retryBtn;
-
     private Long id;
-
     private WebSocketReceiveClient webSocketClient;
+    private Callback activity;
 
     {
         try {
             webSocketClient = WebSocketReceiveClient.getInstance();
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             Log.e(TAG, "Failed to create instance of webSocketClient! " + ex.getMessage());
         }
     }
-
-    private final Executor networkExecutor = Executors.newSingleThreadExecutor();
-
-    private Callback activity;
-
 
     @Override
     public void onAttach(Context context) {
@@ -81,12 +80,17 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
         return view;
     }
 
-
     @Override
     public void onIdRegistered(long id) {
         this.id = id;
         yourId.setVisibility(View.VISIBLE);
         yourId.setText(String.format(getString(R.string.your_id_is), id));
+        try {
+            Bitmap bitmap = encodeAsBitmap(Long.toString(id), (int) getResources().getDimension(R.dimen.qr));
+            imageView.setImageBitmap(bitmap);
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -97,8 +101,6 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
                 .setNegativeButton(R.string.no, (d, w) -> sendAnswerOnRequest(false))
                 .show();
     }
-
-
 
     private void sendAnswerOnRequest(boolean accept) {
         networkExecutor.execute(() -> webSocketClient.sendAnswerOnRequest(accept));
@@ -129,7 +131,6 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
         }
     }
 
-
     @Override
     public void onError(int errorCode) {
 
@@ -137,11 +138,10 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
 
     @OnClick(R.id.retry)
     void connectToWebsocket() {
-        networkExecutor.execute(() ->  {
+        networkExecutor.execute(() -> {
             try {
                 webSocketClient.connect();
-            }
-            catch (WebSocketException | IOException ex) {
+            } catch (WebSocketException | IOException ex) {
                 UiThread.run(() -> {
                     progressBar.setVisibility(View.GONE);
                     Log.e(TAG, "Failed to connect to websocket! " + ex.getMessage());
@@ -152,9 +152,9 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
                     status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
                     retryBtn.setVisibility(View.VISIBLE);
                 });
-            }});
+            }
+        });
     }
-
 
     @Override
     public void onDestroyView() {
@@ -165,6 +165,4 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     public interface Callback {
         void onReceivingStarted();
     }
-
-    private static final String TAG = PrepareReceivingFragment.class.getSimpleName();
 }
