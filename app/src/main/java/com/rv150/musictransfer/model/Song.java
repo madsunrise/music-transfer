@@ -8,20 +8,25 @@ import android.os.Parcelable;
  */
 
 public class Song implements Parcelable {
-    private final String title;
-    private final String path;
-    private final long size;
+    public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
+        @Override
+        public Song createFromParcel(Parcel in) {
+            return new Song(in.readString(), in.readString(), in.readLong());
+        }
+
+        @Override
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
+    public final String title;
+    public final String path;
+    public final long size;
 
     public Song(String title, String path, long size) {
         this.title = title;
         this.path = path;
         this.size = size;
-    }
-
-    private Song(Parcel in) {
-        title = in.readString();
-        path = in.readString();
-        size = in.readLong();
     }
 
     @Override
@@ -34,29 +39,5 @@ public class Song implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
-    }
-
-    public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
-        @Override
-        public Song createFromParcel(Parcel in) {
-            return new Song(in);
-        }
-
-        @Override
-        public Song[] newArray(int size) {
-            return new Song[size];
-        }
-    };
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public long getSize() {
-        return size;
     }
 }

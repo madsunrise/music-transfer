@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 
 import static com.rv150.musictransfer.network.Message.ALLOW_TRANSFERRING;
 import static com.rv150.musictransfer.network.Message.ERROR;
@@ -38,41 +37,21 @@ import static com.rv150.musictransfer.utils.Config.WEBSOCKET_URL;
 public class WebSocketSendClient extends WebSocketAdapter {
 
 
-    private WebSocket webSocket;
-
+    private static final String TAG = WebSocketSendClient.class.getSimpleName();
+    private static WebSocketSendClient instance = new WebSocketSendClient();
     private final Gson gson = new Gson();
+    private WebSocket webSocket;
     private Song songForTransfer;
+    private PrepareCallback prepareCallback;
+    private SenderCallback senderCallback;
 
     private WebSocketSendClient() {
 
     }
 
-    private static WebSocketSendClient instance = new WebSocketSendClient();
-
     public static WebSocketSendClient getInstance() throws IOException {
         return instance;
     }
-
-
-    public interface CommonCallback {
-        void onConnected();
-        void onDisconnected(boolean byServer);
-        void onError(int errorCode);
-    }
-
-    public interface PrepareCallback extends CommonCallback {
-        void onReceiverFound(boolean found);
-    }
-
-    public interface SenderCallback extends CommonCallback {
-        void onSendingStarted();
-        void onProgressChanged(int progress);
-        void onSendingFinished();
-    }
-
-    private PrepareCallback prepareCallback;
-    private SenderCallback senderCallback;
-
 
     @Override
     public void onTextMessage(WebSocket websocket, String text) throws Exception {
@@ -124,26 +103,20 @@ public class WebSocketSendClient extends WebSocketAdapter {
         }
     }
 
-
-
-
     public void registerSongForTransferring(Song song, String receiverId) {
-        Log.d(TAG, "Registered song " + song.getTitle() + " for transferring to " + receiverId);
-        SendRequest request = new SendRequest(song.getTitle(), song.getSize(), receiverId);
+        Log.d(TAG, "Registered song " + song.title + " for transferring to " + receiverId);
+        SendRequest request = new SendRequest(song.title, song.size, receiverId);
         Message message = new Message(RECEIVER_ID, gson.toJson(request));
         webSocket.sendText(gson.toJson(message));
         this.songForTransfer = song;
     }
-
-
-
 
     private void sendFile() {
         if (songForTransfer == null) {
             Log.e(TAG, "Error sending file - songForTransfer is null!");
             return;
         }
-        File file = new File(songForTransfer.getPath());
+        File file = new File(songForTransfer.path);
         try {
             InputStream is = new FileInputStream(file);
             byte[] chunk = new byte[BUFFER_SIZE];
@@ -174,9 +147,6 @@ public class WebSocketSendClient extends WebSocketAdapter {
         }
     }
 
-
-
-
     public void connect() throws WebSocketException, IOException {
         webSocket = new WebSocketFactory()
                 .createSocket(WEBSOCKET_URL, 5000)
@@ -194,8 +164,6 @@ public class WebSocketSendClient extends WebSocketAdapter {
         return webSocket != null && webSocket.isOpen();
     }
 
-
-
     private void sendFinishSignal() {
         try {
             Message message = new Message(SENDING_FINISHED, "ok");
@@ -207,7 +175,6 @@ public class WebSocketSendClient extends WebSocketAdapter {
             Log.e(TAG, ex.getMessage());
         }
     }
-
 
     @Override
     public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
@@ -247,5 +214,23 @@ public class WebSocketSendClient extends WebSocketAdapter {
         }
     }
 
-    private static final String TAG = WebSocketSendClient.class.getSimpleName();
+    public interface CommonCallback {
+        void onConnected();
+
+        void onDisconnected(boolean byServer);
+
+        void onError(int errorCode);
+    }
+
+    public interface PrepareCallback extends CommonCallback {
+        void onReceiverFound(boolean found);
+    }
+
+    public interface SenderCallback extends CommonCallback {
+        void onSendingStarted();
+
+        void onProgressChanged(int progress);
+
+        void onSendingFinished();
+    }
 }
