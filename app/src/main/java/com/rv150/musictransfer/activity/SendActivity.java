@@ -16,9 +16,11 @@ public class SendActivity extends AppCompatActivity implements PrepareSendingFra
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sending);
-        PrepareSendingFragment prepareSendingFragment = new PrepareSendingFragment();
-        prepareSendingFragment.setArguments(getIntent().getExtras());
-        changeFragment(prepareSendingFragment, false);
+        if (savedInstanceState == null) {
+            PrepareSendingFragment prepareSendingFragment = new PrepareSendingFragment();
+            prepareSendingFragment.setArguments(getIntent().getExtras());
+            changeFragment(prepareSendingFragment, false);
+        }
     }
 
 
