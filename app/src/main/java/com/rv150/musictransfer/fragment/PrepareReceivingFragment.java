@@ -21,6 +21,7 @@ import com.google.zxing.WriterException;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.network.WebSocketReceiveClient;
+import com.rv150.musictransfer.utils.Config;
 import com.rv150.musictransfer.utils.UiThread;
 
 import java.io.IOException;
@@ -76,9 +77,9 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
         View view = inflater.inflate(R.layout.prepare_receiving_fragment, container, false);
         ButterKnife.bind(this, view);
         webSocketClient.setCallback(this);
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && savedInstanceState.containsKey(Config.ID_KEY)) {
             onConnected();
-            onIdRegistered(savedInstanceState.getLong("qwe"));
+            onIdRegistered(savedInstanceState.getLong(Config.ID_KEY));
         } else {
             connectToWebsocket();
         }
@@ -88,7 +89,7 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putLong("qwe", id);
+        outState.putLong(Config.ID_KEY, id);
     }
 
     @Override
