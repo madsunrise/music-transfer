@@ -87,6 +87,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         ButterKnife.bind(this, view);
         setUpRecyclerView();
         updateList();
+        setRetainInstance(true);
         return view;
     }
 
