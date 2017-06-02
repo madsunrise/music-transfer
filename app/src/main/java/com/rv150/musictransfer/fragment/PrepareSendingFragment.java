@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
@@ -54,6 +53,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
     Button sendBtn;
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
+    private boolean isCameraEnabled = false;
     private Song song;
     private Executor networkExecutor = Executors.newSingleThreadExecutor();
     private WebSocketSendClient webSocketSendClient;
@@ -82,8 +82,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
 
     private void requestAccess() {
         if (!checkAccess()) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.CAMERA},
+            requestPermissions(new String[]{Manifest.permission.CAMERA},
                     REQUEST_CODE);
         }
     }
@@ -93,12 +92,22 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         if (requestCode == REQUEST_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
-                mScannerView.startCamera();
+                initQR();
             } else {
                 Toast.makeText(getActivity(), R.string.need_permission, Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void initQR() {
+        mScannerView = new ZXingScannerView(getActivity());
+        List<BarcodeFormat> formats = new ArrayList<>();
+        formats.add(BarcodeFormat.QR_CODE);
+        mScannerView.setFormats(formats);
+        fl.addView(mScannerView);
+        mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
+        mScannerView.startCamera();
+        isCameraEnabled = true;
     }
 
     @Nullable
@@ -113,35 +122,33 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         }
         webSocketSendClient.setCallback(this);
         setOnTextChangedListener();
-
-        mScannerView = new ZXingScannerView(getActivity());
-        List<BarcodeFormat> formats = new ArrayList<>();
-        formats.add(BarcodeFormat.QR_CODE);
-        mScannerView.setFormats(formats);
-        fl.addView(mScannerView);
-
         return view;
     }
 
+
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
         if (checkAccess()) {
-            mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
-            mScannerView.startCamera();          // Start camera on resume
+            initQR();
         } else {
             requestAccess();
         }
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        mScannerView.stopCamera();           // Stop camera on pause
+    public void onStop() {
+        super.onStop();
+        if (isCameraEnabled) {
+            mScannerView.stopCamera();
+        }// Stop camera on pause
     }
 
     @Override
     public void handleResult(Result rawResult) {
+        if (!isCameraEnabled) {
+            return;
+        }
         String text = rawResult.getText();
         if (text.length() == 4 && text.matches("\\d\\d\\d\\d")) {
             receiverCode.setText(text);
