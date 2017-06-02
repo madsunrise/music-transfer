@@ -11,35 +11,17 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
 import com.rv150.musictransfer.fragment.PrepareReceivingFragment;
 import com.rv150.musictransfer.fragment.ReceivingFragment;
+import com.rv150.musictransfer.utils.Config;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity implements PrepareReceivingFragment.Callback {
 
+    @BindView(R.id.navigation)
+    BottomNavigationView navigation;
+
     private Fragment currentFragment;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-
-        changeFragment(new MusicListFragment(), false);
-    }
-
-
-    private void changeFragment(Fragment fragment, boolean addToBackStack) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.container, fragment);
-        if (addToBackStack) {
-            transaction.addToBackStack(null);
-        }
-        transaction.commitAllowingStateLoss();
-        currentFragment = fragment;
-    }
-
-
-
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = item -> {
         switch (item.getItemId()) {
@@ -57,6 +39,32 @@ public class MainActivity extends AppCompatActivity implements PrepareReceivingF
         return false;
     };
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+        if (savedInstanceState != null) {
+            currentFragment = getSupportFragmentManager()
+                    .getFragment(savedInstanceState, Config.MAIN_ACTIVITY_FRAGMENT_TAG);
+        } else {
+            changeFragment(new MusicListFragment(), false);
+        }
+    }
+
+    private void changeFragment(Fragment fragment, boolean addToBackStack) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.container, fragment, Config.MAIN_ACTIVITY_FRAGMENT_TAG);
+        if (addToBackStack) {
+            transaction.addToBackStack(null);
+        }
+        transaction.commitAllowingStateLoss();
+        currentFragment = fragment;
+    }
 
     @Override
     public void onReceivingStarted() {

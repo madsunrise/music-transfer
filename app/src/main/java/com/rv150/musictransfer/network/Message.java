@@ -1,13 +1,6 @@
 package com.rv150.musictransfer.network;
 
-/**
- * Created by ivan on 10.05.17.
- */
-
 public class Message {
-    private final String type;
-    private final String data;
-
     public static final String INITIALIZE_USER = "GettingID";
     public static final String RECEIVER_ID = "receiver_id";
     public static final String SENDING_FINISHED = "sending_finished";
@@ -17,6 +10,8 @@ public class Message {
     public static final String RECEIVER_FOUND = "receiver_found";
     public static final String RECEIVER_NOT_FOUND = "receiver_not_found";
     public static final String ALLOW_TRANSFERRING = "allow_transferring";
+    private final String type;
+    private final String data;
 
     public Message(String type, String data) {
         this.type = type;

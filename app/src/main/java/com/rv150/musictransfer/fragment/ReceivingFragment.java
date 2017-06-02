@@ -22,19 +22,13 @@ import butterknife.ButterKnife;
 
 import static com.rv150.musictransfer.network.WebSocketReceiveClient.FILE_CREATION_ERROR;
 
-/**
- * Created by ivan on 27.05.17.
- */
-
 public class ReceivingFragment extends Fragment implements WebSocketReceiveClient.ReceiverCallback {
+    private static final String TAG = ReceivingFragment.class.getSimpleName();
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
-
     @BindView(R.id.status)
     TextView status;
-
     private WebSocketReceiveClient webSocketClient;
-
 
     {
         try {
@@ -44,9 +38,6 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
         }
     }
 
-
-
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -55,7 +46,6 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
         webSocketClient.setCallback(this);
         return view;
     }
-
 
     @Override
     public void onConnected() {
@@ -67,14 +57,11 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
 
     }
 
-
-
     @Override
     public void onFileReceivingFinished() {
         status.setText(R.string.file_has_been_received);
         status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
     }
-
 
     @Override
     public void onDestroyView() {
@@ -96,7 +83,5 @@ public class ReceivingFragment extends Fragment implements WebSocketReceiveClien
     public void onProgressChanged(int percentage) {
         progressBar.setProgress(percentage);
     }
-
-    private static final String TAG = ReceivingFragment.class.getSimpleName();
 
 }

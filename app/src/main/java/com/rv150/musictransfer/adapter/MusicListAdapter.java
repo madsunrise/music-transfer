@@ -13,10 +13,6 @@ import com.rv150.musictransfer.model.Song;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by ivan on 09.05.17.
- */
-
 public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyViewHolder> {
 
     private final MusicListFragment feedFragment;
@@ -26,7 +22,6 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyVi
         this.songs = songs;
         feedFragment = fragment;
     }
-
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

@@ -3,10 +3,6 @@ package com.rv150.musictransfer.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-/**
- * Created by ivan on 09.05.17.
- */
-
 public class Song implements Parcelable {
     public static final Parcelable.Creator<Song> CREATOR = new Parcelable.Creator<Song>() {
         @Override

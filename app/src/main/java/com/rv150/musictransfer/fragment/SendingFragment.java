@@ -21,22 +21,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-/**
- * Created by ivan on 27.05.17.
- */
-
 public class SendingFragment extends Fragment implements WebSocketSendClient.SenderCallback {
 
+    private static final String TAG = SendingFragment.class.getSimpleName();
     @BindView(R.id.progress_bar)
     ProgressBar progressBar;
-
     @BindView(R.id.status)
     TextView status;
-
     @BindView(R.id.menu_button)
     Button menuButton;
-
-
     private WebSocketSendClient webSocketSendClient;
 
     {
@@ -47,7 +40,6 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
         }
     }
 
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -56,7 +48,6 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
         webSocketSendClient.setCallback(this);
         return view;
     }
-
 
     @Override
     public void onConnected() {
@@ -67,9 +58,6 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
     public void onDisconnected(boolean byServer) {
 
     }
-
-
-
 
     @Override
     public void onSendingStarted() {
@@ -88,7 +76,6 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
         menuButton.setVisibility(View.VISIBLE);
     }
 
-
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -105,7 +92,5 @@ public class SendingFragment extends Fragment implements WebSocketSendClient.Sen
     void backToMenu() {
         getActivity().finish();
     }
-
-    private static final String TAG = SendingFragment.class.getSimpleName();
 }
 

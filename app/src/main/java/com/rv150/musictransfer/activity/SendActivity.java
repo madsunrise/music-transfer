@@ -10,10 +10,6 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.PrepareSendingFragment;
 import com.rv150.musictransfer.fragment.SendingFragment;
 
-/**
- * Created by ivan on 10.05.17.
- */
-
 public class SendActivity extends AppCompatActivity implements PrepareSendingFragment.Callback {
 
     @Override

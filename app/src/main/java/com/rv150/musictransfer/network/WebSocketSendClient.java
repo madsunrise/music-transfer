@@ -29,11 +29,6 @@ import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
 import static com.rv150.musictransfer.utils.Config.BUFFER_SIZE;
 import static com.rv150.musictransfer.utils.Config.WEBSOCKET_URL;
 
-
-/**
- * Created by ivan on 10.05.17.
- */
-
 public class WebSocketSendClient extends WebSocketAdapter {
 
 

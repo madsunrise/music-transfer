@@ -31,5 +31,6 @@
     <string name="main_menu">Главное меню</string>
     <string name="file_not_found_or_corrupted">Файл не найден либо поврежден</string>
     <string name="failed_to_create_file">Не удается создать файл на диске</string>
+    <string name="need_permission">Need camera permission</string>
 
 </resources>

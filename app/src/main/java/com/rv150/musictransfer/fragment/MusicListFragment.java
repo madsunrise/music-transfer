@@ -33,10 +33,6 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-/**
- * Created by ivan on 09.05.17.
- */
-
 public class MusicListFragment extends Fragment implements View.OnClickListener {
 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
@@ -87,6 +83,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         ButterKnife.bind(this, view);
         setUpRecyclerView();
         updateList();
+        setRetainInstance(true);
         return view;
     }
 
@@ -121,7 +118,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(songs -> adapter.setData(songs),
-                e -> Log.e(TAG, "EXCEPTION!"));
+                e -> Log.e(TAG, "EXCEPTION!" + e));
     }
 
     private long getSizeFromPath(String path) {
