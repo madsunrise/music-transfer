@@ -11,6 +11,7 @@ import com.rv150.musictransfer.R;
 import com.rv150.musictransfer.fragment.MusicListFragment;
 import com.rv150.musictransfer.fragment.PrepareReceivingFragment;
 import com.rv150.musictransfer.fragment.ReceivingFragment;
+import com.rv150.musictransfer.utils.Config;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements PrepareReceivingF
 
         if (savedInstanceState != null) {
             FragmentManager fragmentManager = getSupportFragmentManager();
-            currentFragment = fragmentManager.getFragment(savedInstanceState, "qwe");
+            currentFragment = fragmentManager.getFragment(savedInstanceState, Config.MAIN_ACTIVITY_FRAGMENT_TAG);
         } else {
             changeFragment(new MusicListFragment(), false);
         }
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements PrepareReceivingF
     private void changeFragment(Fragment fragment, boolean addToBackStack) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.container, fragment, "qwe");
+        transaction.replace(R.id.container, fragment, Config.MAIN_ACTIVITY_FRAGMENT_TAG);
         if (addToBackStack) {
             transaction.addToBackStack(null);
         }

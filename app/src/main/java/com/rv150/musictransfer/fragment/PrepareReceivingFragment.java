@@ -76,8 +76,19 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
         View view = inflater.inflate(R.layout.prepare_receiving_fragment, container, false);
         ButterKnife.bind(this, view);
         webSocketClient.setCallback(this);
-        connectToWebsocket();
+        if (savedInstanceState != null) {
+            onConnected();
+            onIdRegistered(savedInstanceState.getLong("qwe"));
+        } else {
+            connectToWebsocket();
+        }
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("qwe", id);
     }
 
     @Override
