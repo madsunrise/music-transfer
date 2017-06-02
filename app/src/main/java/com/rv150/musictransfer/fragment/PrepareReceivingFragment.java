@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,8 +43,6 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
 
     private static final String TAG = PrepareReceivingFragment.class.getSimpleName();
     private final Executor networkExecutor = Executors.newSingleThreadExecutor();
-    @BindView(R.id.status)
-    TextView status;
     @BindView(R.id.your_id)
     TextView yourId;
     @BindView(R.id.progress_bar)
@@ -53,6 +51,10 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     ImageView imageView;
     @BindView(R.id.retry)
     Button retryBtn;
+    @BindView(R.id.no_connection)
+    LinearLayout noConnection;
+    @BindView(R.id.connection)
+    ViewGroup connection;
     private Long id;
     private WebSocketReceiveClient webSocketClient;
     private Callback activity;
@@ -95,7 +97,7 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     @Override
     public void onIdRegistered(long id) {
         this.id = id;
-        yourId.setVisibility(View.VISIBLE);
+        connection.setVisibility(View.VISIBLE);
         yourId.setText(String.format(getString(R.string.your_id_is), id));
         try {
             Bitmap bitmap = encodeAsBitmap(Long.toString(id), (int) getResources().getDimension(R.dimen.qr));
@@ -124,22 +126,16 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
     @Override
     public void onConnected() {
         progressBar.setVisibility(View.GONE);
-        status.setVisibility(View.VISIBLE);
-        status.setText(R.string.connection_established);
-        status.setTextColor(ContextCompat.getColor(getContext(), R.color.green));
-        retryBtn.setVisibility(View.GONE);
+        connection.setVisibility(View.VISIBLE);
+        noConnection.setVisibility(View.GONE);
     }
 
     @Override
     public void onDisconnected(boolean byServer) {
         if (!byServer) {
             progressBar.setVisibility(View.GONE);
-            status.setVisibility(View.VISIBLE);
-            status.setText(R.string.no_connection);
-            status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
+            noConnection.setVisibility(View.GONE);
             Toast.makeText(getContext(), R.string.connection_error, Toast.LENGTH_SHORT).show();
-            yourId.setVisibility(View.INVISIBLE);
-            retryBtn.setVisibility(View.VISIBLE);
         }
     }
 
@@ -157,12 +153,9 @@ public class PrepareReceivingFragment extends Fragment implements WebSocketRecei
                 UiThread.run(() -> {
                     progressBar.setVisibility(View.GONE);
                     Log.e(TAG, "Failed to connect to websocket! " + ex.getMessage());
-                    status.setVisibility(View.VISIBLE);
+                    noConnection.setVisibility(View.VISIBLE);
                     Toast.makeText(getContext(),
                             R.string.connection_error, Toast.LENGTH_SHORT).show();
-                    status.setText(R.string.no_connection);
-                    status.setTextColor(ContextCompat.getColor(getContext(), R.color.red));
-                    retryBtn.setVisibility(View.VISIBLE);
                 });
             }
         });

@@ -21,6 +21,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.rv150.musictransfer.R;
@@ -29,6 +30,8 @@ import com.rv150.musictransfer.network.WebSocketSendClient;
 import com.rv150.musictransfer.utils.UiThread;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -65,8 +68,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
     {
         try {
             webSocketSendClient = WebSocketSendClient.getInstance();
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             Log.e(TAG, "Failed to create instance of webSocketSendClient! " + ex.getMessage());
         }
     }
@@ -118,9 +120,9 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         setOnTextChangedListener();
 
         mScannerView = new ZXingScannerView(getActivity());
-//        List<BarcodeFormat> formats = new ArrayList<>();
-//        formats.add(BarcodeFormat.QR_CODE);
-//        mScannerView.setFormats(formats);
+        List<BarcodeFormat> formats = new ArrayList<>();
+        formats.add(BarcodeFormat.QR_CODE);
+        mScannerView.setFormats(formats);
         fl.addView(mScannerView);
 
         return view;
@@ -145,9 +147,14 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
 
     @Override
     public void handleResult(Result rawResult) {
-        receiverCode.setText(rawResult.getText());
-        send();
-        // mScannerView.resumeCameraPreview(this);
+        String text = rawResult.getText();
+        if (text.length() == 4 && text.matches("\\d\\d\\d\\d")) {
+            receiverCode.setText(text);
+            send();
+        } else {
+            mScannerView.resumeCameraPreview(this);
+            Toast.makeText(getActivity(), "QR code format exception", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @OnClick(R.id.send)
@@ -209,8 +216,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         if (enabled) {
             sendBtn.setEnabled(true);
             progressBar.setVisibility(View.INVISIBLE);
-        }
-        else {
+        } else {
             sendBtn.setEnabled(false);
             progressBar.setVisibility(View.VISIBLE);
         }
