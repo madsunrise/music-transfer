@@ -13,20 +13,15 @@ import com.rv150.musictransfer.model.Song;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Created by ivan on 09.05.17.
- */
-
 public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyViewHolder> {
 
-    private List<Song> songs;
     private final MusicListFragment feedFragment;
+    private List<Song> songs;
 
     public MusicListAdapter(List<Song> songs, MusicListFragment fragment) {
         this.songs = songs;
         feedFragment = fragment;
     }
-
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -39,21 +34,12 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyVi
     @Override
     public void onBindViewHolder(final MyViewHolder holder, int position) {
         Song service = songs.get(position);
-        holder.title.setText(service.getTitle());
+        holder.title.setText(service.title);
     }
 
     @Override
     public int getItemCount() {
         return songs.size();
-    }
-
-    class MyViewHolder extends RecyclerView.ViewHolder {
-        TextView title;
-
-        MyViewHolder(View view) {
-            super(view);
-            title = (TextView) view.findViewById(R.id.item_title);
-        }
     }
 
     public void addItem(Song song) {
@@ -68,6 +54,15 @@ public class MusicListAdapter extends RecyclerView.Adapter<MusicListAdapter.MyVi
 
     public List<Song> getSongs() {
         return songs;
+    }
+
+    class MyViewHolder extends RecyclerView.ViewHolder {
+        TextView title;
+
+        MyViewHolder(View view) {
+            super(view);
+            title = (TextView) view.findViewById(R.id.item_title);
+        }
     }
 }
 

@@ -3,10 +3,6 @@ package com.rv150.musictransfer.utils;
 import android.os.Handler;
 import android.os.Looper;
 
-/**
- * Created by ivan on 30.03.17.
- */
-
 public class UiThread {
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 

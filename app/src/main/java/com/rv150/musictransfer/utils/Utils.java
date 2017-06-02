@@ -10,17 +10,13 @@ import com.google.zxing.common.BitMatrix;
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
 
-/**
- * Created by ivan on 31.05.17.
- */
-
 public class Utils {
 
-    public static Bitmap encodeAsBitmap(String str, int width) throws WriterException {
+    public static Bitmap encodeAsBitmap(String str, int size) throws WriterException {
         BitMatrix result;
         try {
             result = new MultiFormatWriter().encode(str,
-                    BarcodeFormat.QR_CODE, width, width, null);
+                    BarcodeFormat.QR_CODE, size, size, null);
         } catch (IllegalArgumentException iae) {
             return null;
         }
@@ -34,7 +30,7 @@ public class Utils {
             }
         }
         Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        bitmap.setPixels(pixels, 0, width, 0, 0, w, h);
+        bitmap.setPixels(pixels, 0, size, 0, 0, w, h);
         return bitmap;
     }
 }

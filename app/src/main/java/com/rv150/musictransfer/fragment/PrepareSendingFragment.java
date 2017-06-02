@@ -40,11 +40,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
-
-/**
- * Created by ivan on 10.05.17.
- */
-
 public class PrepareSendingFragment extends Fragment implements WebSocketSendClient.PrepareCallback, ZXingScannerView.ResultHandler {
 
     private static final int REQUEST_CODE = 1232;
@@ -114,7 +109,7 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         Bundle bundle = getArguments();
         song = (Song) bundle.get(Song.class.getSimpleName());
         if (song != null) {
-            info.setText(String.format(getString(R.string.sending_songname), song.getTitle()));
+            info.setText(String.format(getString(R.string.sending_songname), song.title));
         }
         webSocketSendClient.setCallback(this);
         setOnTextChangedListener();

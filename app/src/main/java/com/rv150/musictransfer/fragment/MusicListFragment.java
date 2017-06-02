@@ -33,10 +33,6 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-/**
- * Created by ivan on 09.05.17.
- */
-
 public class MusicListFragment extends Fragment implements View.OnClickListener {
 
     private static final int REQUEST_READ_EXT_STORAGE = 0;
@@ -108,7 +104,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
-        if (item.getSize() == 0) {
+        if (item.size == 0) {
             Toast.makeText(getContext(), R.string.file_not_found_or_corrupted, Toast.LENGTH_SHORT).show();
             return;
         }

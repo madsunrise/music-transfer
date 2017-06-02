@@ -34,11 +34,6 @@ import butterknife.OnClick;
 
 import static com.rv150.musictransfer.utils.Utils.encodeAsBitmap;
 
-
-/**
- * Created by ivan on 26.05.17.
- */
-
 public class PrepareReceivingFragment extends Fragment implements WebSocketReceiveClient.PrepareCallback {
 
     private static final String TAG = PrepareReceivingFragment.class.getSimpleName();

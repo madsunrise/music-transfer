@@ -26,55 +26,27 @@ import static com.rv150.musictransfer.network.Message.SENDING_FINISHED;
 import static com.rv150.musictransfer.utils.Config.BUFFER_SIZE;
 import static com.rv150.musictransfer.utils.Config.WEBSOCKET_URL;
 
-/**
- * Created by ivan on 27.05.17.
- */
-
 public class WebSocketReceiveClient extends WebSocketAdapter {
 
-    private WebSocket webSocket;
-
-    private final Gson gson = new Gson();
-
     public static final int FILE_CREATION_ERROR = 0;
+    private static final String TAG = WebSocketReceiveClient.class.getSimpleName();
+    private static WebSocketReceiveClient instance = new WebSocketReceiveClient();
+    private final Gson gson = new Gson();
+    private WebSocket webSocket;
+    private BufferedOutputStream outputStream = null;
+    private String currentFileName = null;
+    private long currentFileSize = 0;
+    private PrepareCallback prepareCallback;
+    private ReceiverCallback receiverCallback;
+    private int iteration = 1;
 
     private WebSocketReceiveClient() {
 
     }
 
-    private static WebSocketReceiveClient instance = new WebSocketReceiveClient();
-
     public static WebSocketReceiveClient getInstance() throws IOException {
         return instance;
     }
-
-    private BufferedOutputStream outputStream = null;
-    private String currentFileName = null;
-    private long currentFileSize = 0;
-
-
-    public interface CommonCallback {
-        void onConnected();
-        void onDisconnected(boolean byServer);
-        void onError(int errorCode);
-    }
-
-    public interface PrepareCallback extends CommonCallback {
-        void onIdRegistered(long id);
-        void onFileSendingRequest(String fileName);
-    }
-
-    public interface ReceiverCallback extends CommonCallback {
-        void onProgressChanged(int percentage);
-        void onFileReceivingFinished();
-    }
-
-
-    private PrepareCallback prepareCallback;
-    private ReceiverCallback receiverCallback;
-
-    private int iteration = 1;
-
 
     @Override
     public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
@@ -105,7 +77,6 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
         iteration++;
     }
 
-
     @Override
     public void onTextMessage(WebSocket websocket, String text) throws Exception {
         Message message = gson.fromJson(text, Message.class);
@@ -134,8 +105,8 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
 
             case REQUEST_SEND:
                 SendRequest request = gson.fromJson(message.getData(), SendRequest.class);
-                currentFileName = request.getFileName();
-                currentFileSize = request.getFileSize();
+                currentFileName = request.fileName;
+                currentFileSize = request.fileSize;
                 Log.d(TAG, "Getted request on sending " + currentFileName + " (" + currentFileSize + " bytes)");
                 UiThread.run(() -> {
                     if (prepareCallback != null) {
@@ -149,15 +120,11 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
         }
     }
 
-
-
-
     public void sendAnswerOnRequest(boolean answer) {
         Log.d(TAG, "Sending answer in request: " + String.valueOf(answer));
         Message message = new Message(ANSWER_ON_REQUEST, String.valueOf(answer));
         webSocket.sendText(gson.toJson(message));
     }
-
 
     public void connect() throws WebSocketException, IOException {
         webSocket = new WebSocketFactory()
@@ -175,9 +142,6 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
     public boolean isConnected() {
         return webSocket.isOpen();
     }
-
-
-
 
     @Override
     public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
@@ -212,7 +176,6 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
         Log.d(TAG, "Connection ERROR!!! Reason: " + exception.getMessage());
     }
 
-
     // Привязан должен быть только один коллбек в один момент времени
     public void setCallback(CommonCallback callback) {
         if (callback instanceof PrepareCallback) {
@@ -225,6 +188,25 @@ public class WebSocketReceiveClient extends WebSocketAdapter {
         }
     }
 
-    private static final String TAG = WebSocketReceiveClient.class.getSimpleName();
+    public interface CommonCallback {
+        void onConnected();
+
+        void onDisconnected(boolean byServer);
+
+        void onError(int errorCode);
+    }
+
+
+    public interface PrepareCallback extends CommonCallback {
+        void onIdRegistered(long id);
+
+        void onFileSendingRequest(String fileName);
+    }
+
+    public interface ReceiverCallback extends CommonCallback {
+        void onProgressChanged(int percentage);
+
+        void onFileReceivingFinished();
+    }
 }
 

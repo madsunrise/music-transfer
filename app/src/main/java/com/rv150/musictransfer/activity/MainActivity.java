@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity implements PrepareReceivingF
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         if (savedInstanceState != null) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            currentFragment = fragmentManager.getFragment(savedInstanceState, Config.MAIN_ACTIVITY_FRAGMENT_TAG);
+            currentFragment = getSupportFragmentManager()
+                    .getFragment(savedInstanceState, Config.MAIN_ACTIVITY_FRAGMENT_TAG);
         } else {
             changeFragment(new MusicListFragment(), false);
         }
