@@ -151,8 +151,12 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         }
         String text = rawResult.getText();
         if (text.length() == 4 && text.matches("\\d\\d\\d\\d")) {
-            receiverCode.setText(text);
-            send();
+            if (!text.equals(receiverCode.getText().toString())) {
+                receiverCode.setText(text);
+                send();
+            } else {
+                mScannerView.resumeCameraPreview(this);
+            }
         } else {
             mScannerView.resumeCameraPreview(this);
             Toast.makeText(getActivity(), "QR code format exception", Toast.LENGTH_SHORT).show();
@@ -201,6 +205,9 @@ public class PrepareSendingFragment extends Fragment implements WebSocketSendCli
         }
         Toast.makeText(getContext(), R.string.receiver_with_this_id_not_found, Toast.LENGTH_SHORT).show();
         setUiEnabled(true);
+        if (isCameraEnabled) {
+            mScannerView.resumeCameraPreview(this);
+        }
     }
 
     @Override
