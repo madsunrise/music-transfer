@@ -5,6 +5,7 @@
     android:layout_margin="16dp"
     android:orientation="vertical">
 
+    <!-- is this need? -->
     <ProgressBar
         android:id="@+id/progress_bar"
         style="?android:attr/progressBarStyleHorizontal"
@@ -13,18 +14,17 @@
         android:indeterminate="true"
         android:visibility="invisible" />
 
-
+    <!-- info about sending file -->
     <TextView
         android:id="@+id/sending_info"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxLines="1" />
+        android:layout_height="wrap_content" />
 
+    <!-- text input  -->
     <LinearLayout
         android:id="@+id/main_part"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="75dp"
         android:orientation="horizontal">
 
         <TextView
@@ -34,20 +34,17 @@
 
         <EditText
             android:id="@+id/receiver_id"
-            android:layout_width="100dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginStart="10dp"
+            android:layout_weight="1"
             android:inputType="number"
             android:maxLength="@integer/id_length"
             android:textAlignment="center" />
 
         <Button
             android:id="@+id/send"
-            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
             android:enabled="false"
             android:text="@string/send" />
 

@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal">
 
+    <!-- progress while loading -->
     <ProgressBar
         android:id="@+id/progress_bar"
         android:layout_width="wrap_content"
@@ -12,6 +13,7 @@
         android:layout_centerVertical="true"
         android:visibility="visible" />
 
+    <!-- screen without connection -->
     <LinearLayout
         android:id="@+id/no_connection"
         android:layout_width="wrap_content"
@@ -33,27 +35,16 @@
             android:text="@string/retry" />
     </LinearLayout>
 
+    <!-- screen with connection -->
     <LinearLayout
         android:id="@+id/connection"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:baselineAligned="false"
         android:orientation="horizontal"
         android:visibility="gone">
 
-        <RelativeLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <ImageView
-                android:id="@+id/qr"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true" />
-        </RelativeLayout>
-
-
+        <!-- text content -->
         <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -79,8 +70,20 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal" />
             </LinearLayout>
+        </RelativeLayout>
 
+        <!-- qr code image -->
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
 
+            <ImageView
+                android:id="@+id/qr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true" />
         </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>
