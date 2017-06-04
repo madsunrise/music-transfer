@@ -26,6 +26,7 @@ import com.rv150.musictransfer.model.Song;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -81,12 +82,12 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         Log.d(TAG, "OnCreateView");
         View view = inflater.inflate(R.layout.music_list_fragment, container, false);
         ButterKnife.bind(this, view);
-        setUpRecyclerView();
+        setupRecyclerView();
         updateList();
         return view;
     }
 
-    private void setUpRecyclerView() {
+    private void setupRecyclerView() {
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(llm);
@@ -103,12 +104,14 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
     public void onClick(View v) {
         int itemPosition = recyclerView.getChildLayoutPosition(v);
         Song item = adapter.getSongs().get(itemPosition);
-        if (item.size == 0) {
+        if (item.getSize() == 0) {
             Toast.makeText(getContext(), R.string.file_not_found_or_corrupted, Toast.LENGTH_SHORT).show();
             return;
         }
         Intent intent = new Intent(getContext(), SendActivity.class);
-        intent.putExtra(Song.class.getSimpleName(), item);
+        intent.putExtra("title", item.component1());
+        intent.putExtra("path", item.component2());
+        intent.putExtra("size", item.component3());
         startActivity(intent);
     }
 
@@ -116,7 +119,7 @@ public class MusicListFragment extends Fragment implements View.OnClickListener 
         Observable.create(musicListGenerator)
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(songs -> adapter.setData(songs),
+                .subscribe(songs -> adapter.setData(Arrays.asList(songs)),
                 e -> Log.e(TAG, "EXCEPTION!" + e));
     }
 

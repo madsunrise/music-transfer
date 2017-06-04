@@ -1,33 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <ProgressBar
         android:id="@+id/progress_bar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
         android:max="100"
-        android:progress="0"
-        android:layout_marginTop="100dp"/>
+        android:progress="0" />
 
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:textSize="20sp"
-        android:text="@string/wait_for_receiver"/>
+        android:text="@string/wait_for_receiver"
+        android:textSize="20sp" />
 
     <Button
         android:id="@+id/menu_button"
+        style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/main_menu"
-        android:layout_marginTop="50dp"
-        android:visibility="invisible"
         android:layout_gravity="end"
-        style="@style/Widget.AppCompat.Button.Colored" />
+        android:layout_marginTop="50dp"
+        android:text="@string/main_menu"
+        android:visibility="invisible" />
 
 </LinearLayout>
