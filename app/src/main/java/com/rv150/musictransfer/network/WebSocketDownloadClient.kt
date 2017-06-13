@@ -57,11 +57,7 @@ class WebSocketDownloadClient private constructor() : WebSocketAdapter() {
             Message.INITIALIZE_USER -> {
                 val id = java.lang.Long.valueOf(message.data)!!
                 Log.d(TAG, "Getting ID = " + id)
-                UiThread.run {
-                    if (prepareCallback != null) {
-                        prepareCallback!!.onIdRegister(id)
-                    }
-                }
+                prepareCallback!!.onIdRegister(id)
             }
 
 

@@ -1,5 +1,6 @@
 package com.rv150.musictransfer.activity
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
@@ -29,18 +30,16 @@ class SendActivity : AppCompatActivity(), DownloadPrepareFragment.Callback {
         return true
     }
 
-    private fun changeFragment(fragment: Fragment, addToBackStack: Boolean) {
-        val fragmentManager = supportFragmentManager
-        val transaction = fragmentManager.beginTransaction()
-        transaction.replace(R.id.container, fragment)
-        if (addToBackStack) {
-            transaction.addToBackStack(null)
-        }
-        transaction.commitAllowingStateLoss()
-    }
+    @SuppressLint("CommitTransaction")
+    private fun changeFragment(fragment: Fragment, addToBackStack: Boolean): Unit =
+            with(supportFragmentManager.beginTransaction()) {
+                replace(R.id.container, fragment)
+                if (addToBackStack) {
+                    addToBackStack(null)
+                }
+                commitAllowingStateLoss()
+            }
 
-    override fun onSendingStarted() {
-        changeFragment(UploadFragment(), false)
-    }
 
+    override fun onSendingStarted() = changeFragment(UploadFragment(), false)
 }

@@ -1,9 +1,7 @@
 package com.rv150.musictransfer.fragment
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,30 +11,18 @@ import android.widget.TextView
 import com.rv150.musictransfer.R
 import com.rv150.musictransfer.network.WebSocketUploadClient
 import kotterknife.bindView
-import java.io.IOException
 
-class UploadFragment : Fragment(), WebSocketUploadClient.SenderCallback {
+class UploadFragment : BoundFragment(), WebSocketUploadClient.SenderCallback {
     val progressBar by bindView<ProgressBar>(R.id.progress_bar)
     val status by bindView<TextView>(R.id.status)
     val menuButton by bindView<Button>(R.id.menu_button)
-    private var webSocketUploadClient: WebSocketUploadClient? = null
-
-    init {
-        try {
-            webSocketUploadClient = WebSocketUploadClient.instance
-        } catch (ex: IOException) {
-            Log.e(TAG, "Failed to create instance of webSocketUploadClient! " + ex.message)
-        }
-
-    }
+    private val webSocketUploadClient = WebSocketUploadClient.instance
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater?.inflate(R.layout.upload_fragment, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        webSocketUploadClient?.setCallback(this)
+        root = inflater?.inflate(R.layout.upload_fragment, container, false)
+        webSocketUploadClient.setCallback(this)
+        menuButton.setOnClickListener { backToMenu() }
+        return root
     }
 
     override fun onConnected() {
@@ -63,22 +49,16 @@ class UploadFragment : Fragment(), WebSocketUploadClient.SenderCallback {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        webSocketUploadClient?.setCallback(null)
-        webSocketUploadClient?.disconnect()
+        webSocketUploadClient.setCallback(null)
+        webSocketUploadClient.disconnect()
     }
 
     override fun onError(errorCode: Int) {
 
     }
 
-    //@OnClick(R.id.menu_button)
     internal fun backToMenu() {
         activity.finish()
-    }
-
-    companion object {
-
-        private val TAG = UploadFragment::class.java.simpleName
     }
 }
 

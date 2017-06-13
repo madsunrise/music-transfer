@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.text.Editable
 import android.text.TextWatcher
@@ -26,7 +25,7 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.Executors
 
-class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallback, ZXingScannerView.ResultHandler {
+class DownloadPrepareFragment : BoundFragment(), WebSocketUploadClient.PrepareCallback, ZXingScannerView.ResultHandler {
 
     val info by bindView<TextView>(R.id.sending_info)
     val receiverCode by bindView<EditText>(R.id.receiver_id)
@@ -36,22 +35,13 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
     private var isCameraEnabled = false
     private var song: Song? = null
     private val networkExecutor = Executors.newSingleThreadExecutor()
-    private var webSocketUploadClient: WebSocketUploadClient? = null
+    private var webSocketUploadClient: WebSocketUploadClient = WebSocketUploadClient.instance
     private var activity: Callback? = null
     private var mScannerView: ZXingScannerView? = null
 
-    init {
-        try {
-            webSocketUploadClient = WebSocketUploadClient.instance
-        } catch (ex: IOException) {
-            Log.e(TAG, "Failed to create instance of webSocketUploadClient! " + ex.message)
-        }
-
-    }
-
-    override fun onAttach(context: Context?) {
+    override fun onAttach(context: Context) {
         super.onAttach(context)
-        activity = context as Callback?
+        activity = context as Callback
     }
 
     private fun checkAccess(): Boolean {
@@ -60,9 +50,7 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
     }
 
     private fun requestAccess() {
-        when {
-            !checkAccess() -> requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CODE)
-        }
+        if (!checkAccess()) requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CODE)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -87,20 +75,16 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d(TAG, "onCreateView")
-        return inflater?.inflate(R.layout.prepare_sending_fragment, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        Log.d(TAG, "onActivityCreated")
+        root = inflater?.inflate(R.layout.prepare_sending_fragment, container, false)
         val bundle = arguments
         song = Song(bundle.getString("title"), bundle.getString("path"), bundle.getLong("size"))
         if (song != null) {
             info.text = String.format(getString(R.string.sending_songname), song!!.title)
         }
-        webSocketUploadClient?.setCallback(this)
+        webSocketUploadClient.setCallback(this)
         setOnTextChangedListener()
+        sendBtn.setOnClickListener { send() }
+        return root
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -115,7 +99,6 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
 
     override fun onStart() {
         super.onStart()
-        Log.d(TAG, "onStart")
         if (checkAccess()) {
             initQR()
         } else {
@@ -127,6 +110,7 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
         super.onStop()
         if (isCameraEnabled) {
             mScannerView!!.stopCamera()
+            isCameraEnabled = false;
         }
     }
 
@@ -151,17 +135,17 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
     //@OnClick(R.id.send)
     fun send() {
         val code = receiverCode.text.toString()
-        if (!webSocketUploadClient!!.isConnected) {
+        if (!webSocketUploadClient.isConnected) {
             connectWebSocket()
         }
         setUiEnabled(false)
-        networkExecutor.execute { webSocketUploadClient!!.registerSongForTransferring(song!!, code) }
+        networkExecutor.execute { webSocketUploadClient.registerSongForTransferring(song!!, code) }
     }
 
     private fun connectWebSocket() {
         networkExecutor.execute {
             try {
-                webSocketUploadClient!!.connect()
+                webSocketUploadClient.connect()
             } catch (ex: WebSocketException) {
                 UiThread.run {
                     Log.e(TAG, "Failed to connect to websocket! " + ex.message)
@@ -203,7 +187,7 @@ class DownloadPrepareFragment : Fragment(), WebSocketUploadClient.PrepareCallbac
 
     override fun onDestroyView() {
         super.onDestroyView()
-        webSocketUploadClient!!.setCallback(null)
+        webSocketUploadClient.setCallback(null)
     }
 
     private fun setUiEnabled(enabled: Boolean) {

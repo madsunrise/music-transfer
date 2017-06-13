@@ -1,9 +1,7 @@
 package com.rv150.musictransfer.fragment
 
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,29 +12,16 @@ import com.rv150.musictransfer.R
 import com.rv150.musictransfer.network.WebSocketDownloadClient
 import com.rv150.musictransfer.network.WebSocketDownloadClient.Companion.FILE_CREATION_ERROR
 import kotterknife.bindView
-import java.io.IOException
 
-class DownloadFragment : Fragment(), WebSocketDownloadClient.ReceiverCallback {
+class DownloadFragment : BoundFragment(), WebSocketDownloadClient.ReceiverCallback {
     val progressBar by bindView<ProgressBar>(R.id.progress_bar)
     val status by bindView<TextView>(R.id.status)
-    private var webSocketClient: WebSocketDownloadClient? = null
-
-    init {
-        try {
-            webSocketClient = WebSocketDownloadClient.instance
-        } catch (ex: IOException) {
-            Log.e(TAG, "Failed to create instance of webSocketClient! " + ex.message)
-        }
-
-    }
+    private var webSocketClient: WebSocketDownloadClient = WebSocketDownloadClient.instance
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater!!.inflate(R.layout.receiving_fragment, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        webSocketClient!!.setCallback(this)
+        root = inflater?.inflate(R.layout.receiving_fragment, container, false)
+        webSocketClient.setCallback(this)
+        return root
     }
 
     override fun onConnect() {
@@ -53,8 +38,8 @@ class DownloadFragment : Fragment(), WebSocketDownloadClient.ReceiverCallback {
     }
 
     override fun onDestroyView() {
+        webSocketClient.setCallback(null)
         super.onDestroyView()
-        webSocketClient!!.setCallback(null)
     }
 
     override fun onError(errorCode: Int) {
@@ -68,9 +53,4 @@ class DownloadFragment : Fragment(), WebSocketDownloadClient.ReceiverCallback {
     override fun onProgress(percent: Int) {
         progressBar.progress = percent
     }
-
-    companion object {
-        private val TAG = DownloadFragment::class.java.simpleName
-    }
-
 }

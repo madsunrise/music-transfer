@@ -179,7 +179,7 @@ class WebSocketUploadClient private constructor() : WebSocketAdapter() {
             senderCallback = null
         } else {
             prepareCallback = null
-            senderCallback = callback as SenderCallback
+            senderCallback = callback as SenderCallback?
         }
     }
 

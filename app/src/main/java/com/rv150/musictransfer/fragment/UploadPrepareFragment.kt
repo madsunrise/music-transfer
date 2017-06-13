@@ -2,7 +2,6 @@ package com.rv150.musictransfer.fragment
 
 import android.content.Context
 import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,13 +12,12 @@ import com.neovisionaries.ws.client.WebSocketException
 import com.rv150.musictransfer.R
 import com.rv150.musictransfer.network.WebSocketDownloadClient
 import com.rv150.musictransfer.utils.Config
-import com.rv150.musictransfer.utils.UiThread
 import com.rv150.musictransfer.utils.Utils
 import kotterknife.bindView
 import java.io.IOException
 import java.util.concurrent.Executors
 
-class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallback {
+class UploadPrepareFragment : BoundFragment(), WebSocketDownloadClient.PrepareCallback {
     private val networkExecutor = Executors.newSingleThreadExecutor()
     val yourId by bindView<TextView>(R.id.your_id)
     val progressBar by bindView<ProgressBar>(R.id.progress_bar)
@@ -38,14 +36,11 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
     override fun onAttach(context: Context?) {
         super.onAttach(context)
         activity = context as Callback?
+        Log.d(TAG, "onAttach")
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater!!.inflate(R.layout.prepare_receiving_fragment, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+        root = inflater!!.inflate(R.layout.prepare_receiving_fragment, container, false)
         webSocketClient!!.setCallback(this)
         if (savedInstanceState != null && savedInstanceState.containsKey(Config.ID_KEY)) {
             onConnect()
@@ -53,6 +48,8 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
         } else {
             connectToWebsocket()
         }
+        Log.d(TAG, "onCreateView")
+        return root
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -60,13 +57,14 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
         outState!!.putLong(Config.ID_KEY, id!!)
     }
 
-    override fun onIdRegister(id: Long) {
-        this.id = id
-        connection.visibility = View.VISIBLE
-        yourId.text = String.format(getString(R.string.your_id_is), id)
-        val bitmap = Utils.encodeAsBitmap(java.lang.Long.toString(id), resources.getDimension(R.dimen.qr).toInt())
-        imageView.setImageBitmap(bitmap)
-    }
+    override fun onIdRegister(id: Long) =
+            getActivity().runOnUiThread {
+                this.id = id
+                connection.visibility = View.VISIBLE
+                yourId.text = String.format(getString(R.string.your_id_is), id)
+                val bitmap = Utils.encodeAsBitmap(java.lang.Long.toString(id), resources.getDimension(R.dimen.qr).toInt())
+                imageView.setImageBitmap(bitmap)
+            }
 
     override fun onFileUploadRequest(fileName: String) {
         AlertDialog.Builder(context)
@@ -83,7 +81,7 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
         }
     }
 
-    override fun onConnect() {
+    override fun onConnect() = getActivity().runOnUiThread {
         progressBar.visibility = View.GONE
         connection.visibility = View.VISIBLE
         noConnection.visibility = View.GONE
@@ -107,7 +105,7 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
             try {
                 webSocketClient!!.connect()
             } catch (ex: WebSocketException) {
-                UiThread.run {
+                getActivity().runOnUiThread {
                     progressBar.visibility = View.GONE
                     Log.e(TAG, "Failed to connect to websocket! " + ex.message)
                     noConnection.visibility = View.VISIBLE
@@ -115,7 +113,7 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
                             R.string.connection_error, Toast.LENGTH_SHORT).show()
                 }
             } catch (ex: IOException) {
-                UiThread.run {
+                getActivity().runOnUiThread {
                     progressBar.visibility = View.GONE
                     Log.e(TAG, "Failed to connect to websocket! " + ex.message)
                     noConnection.visibility = View.VISIBLE
@@ -127,6 +125,7 @@ class UploadPrepareFragment : Fragment(), WebSocketDownloadClient.PrepareCallbac
 
     override fun onDestroyView() {
         super.onDestroyView()
+        Log.d(TAG, "onDestroyView")
         webSocketClient!!.setCallback(null)
     }
 

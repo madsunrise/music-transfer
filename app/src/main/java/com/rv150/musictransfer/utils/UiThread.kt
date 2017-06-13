@@ -4,7 +4,12 @@ import android.os.Handler
 import android.os.Looper
 
 object UiThread {
-    private val HANDLER = Handler(Looper.getMainLooper())
+    private val HANDLER: Handler
+
+    init {
+        Looper.prepare()
+        HANDLER = Handler(Looper.getMainLooper())
+    }
 
     fun run(runnable: Runnable) {
         HANDLER.post(runnable)
