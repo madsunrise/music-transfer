@@ -76,8 +76,7 @@ class DownloadPrepareFragment : BoundFragment(), WebSocketUploadClient.PrepareCa
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         root = inflater?.inflate(R.layout.prepare_sending_fragment, container, false)
-        val bundle = arguments
-        song = Song(bundle.getString("title"), bundle.getString("path"), bundle.getLong("size"))
+        song = arguments.getParcelable(Song::class.java.simpleName)
         if (song != null) {
             info.text = String.format(getString(R.string.sending_songname), song!!.title)
         }
@@ -89,10 +88,8 @@ class DownloadPrepareFragment : BoundFragment(), WebSocketUploadClient.PrepareCa
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-        if (song != null && outState != null) {
-            outState.putString("title", song!!.title)
-            outState.putString("path", song!!.path)
-            outState.putLong("size", song!!.size)
+        if (song != null) {
+            outState?.putParcelable(Song::class.java.simpleName, song)
         }
     }
 
@@ -132,7 +129,6 @@ class DownloadPrepareFragment : BoundFragment(), WebSocketUploadClient.PrepareCa
         }
     }
 
-    //@OnClick(R.id.send)
     fun send() {
         val code = receiverCode.text.toString()
         if (!webSocketUploadClient.isConnected) {

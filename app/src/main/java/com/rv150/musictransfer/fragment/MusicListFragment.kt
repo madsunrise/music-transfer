@@ -86,15 +86,13 @@ class MusicListFragment : BoundFragment(), View.OnClickListener {
 
     override fun onClick(v: View) {
         val itemPosition = recyclerView.getChildLayoutPosition(v)
-        val (title, path, size) = adapter!!.getSongs()[itemPosition]
-        if (size == 0L) {
+        val song = adapter!!.getSongs()[itemPosition]
+        if (song.size == 0L) {
             Toast.makeText(context, R.string.file_not_found_or_corrupted, Toast.LENGTH_SHORT).show()
             return
         }
         val intent = Intent(context, SendActivity::class.java)
-        intent.putExtra("title", title)
-        intent.putExtra("path", path)
-        intent.putExtra("size", size)
+        intent.putExtra(Song::class.java.simpleName, song)
         startActivity(intent)
     }
 
